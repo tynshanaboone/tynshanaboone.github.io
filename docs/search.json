@@ -12,5 +12,19 @@
     "title": "About",
     "section": "",
     "text": "About this site\n\n1 + 1\n\n[1] 2"
+  },
+  {
+    "objectID": "research.html",
+    "href": "research.html",
+    "title": "Research",
+    "section": "",
+    "text": "###project: Coffee Consumption and Daily productivity Cycles"
+  },
+  {
+    "objectID": "research.html#this-project-examines-how-the-timing-of-caffeine-intake-affects-daily-concentration-levels-and-personal-focus-windows.-the-data-generating-process-involves-daily-coffee-logs-specifically-recording-teh-excact-time-of-consumption-and-ounces-drank-alongside-an-automated-computer-application-that-measures-active-undistracted-writing-time-across-a-three-month-period.",
+    "href": "research.html#this-project-examines-how-the-timing-of-caffeine-intake-affects-daily-concentration-levels-and-personal-focus-windows.-the-data-generating-process-involves-daily-coffee-logs-specifically-recording-teh-excact-time-of-consumption-and-ounces-drank-alongside-an-automated-computer-application-that-measures-active-undistracted-writing-time-across-a-three-month-period.",
+    "title": "Research",
+    "section": "This project examines how the timing of caffeine intake affects daily concentration levels and personal focus windows. The data generating process involves daily coffee logs specifically recording teh excact time of consumption and ounces drank alongside an automated computer application that measures active, undistracted writing time across a three month period.",
+    "text": "This project examines how the timing of caffeine intake affects daily concentration levels and personal focus windows. The data generating process involves daily coffee logs specifically recording teh excact time of consumption and ounces drank alongside an automated computer application that measures active, undistracted writing time across a three month period."
   }
 ]
