@@ -2,29 +2,22 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "tynshana.boone.github.io",
+    "title": "Tynshana Boone",
     "section": "",
-    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites.\n\n1 + 1\n\n[1] 2"
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this site\n\n1 + 1\n\n[1] 2"
+    "text": "Welcome to my personal website. Here you can find my CV, my research, and my coursework for EPPS 6302 Methods of Data Collection and Production under the Assignments menu."
   },
   {
     "objectID": "research.html",
     "href": "research.html",
     "title": "Research",
     "section": "",
-    "text": "###project: Coffee Consumption and Daily productivity Cycles"
+    "text": "Project: Coffee Consumption and Daily Productivity Cycles\nThis project examines how the timing of caffeine intake affects daily concentration levels and personal focus windows. The data generating process involves daily coffee logs specifically recording the exact time of consumption and the ounces consumed, alongside an automated computer application that measures active, undistracted writing time across a three-month period."
   },
   {
-    "objectID": "research.html#this-project-examines-how-the-timing-of-caffeine-intake-affects-daily-concentration-levels-and-personal-focus-windows.-the-data-generating-process-involves-daily-coffee-logs-specifically-recording-teh-excact-time-of-consumption-and-ounces-drank-alongside-an-automated-computer-application-that-measures-active-undistracted-writing-time-across-a-three-month-period.",
-    "href": "research.html#this-project-examines-how-the-timing-of-caffeine-intake-affects-daily-concentration-levels-and-personal-focus-windows.-the-data-generating-process-involves-daily-coffee-logs-specifically-recording-teh-excact-time-of-consumption-and-ounces-drank-alongside-an-automated-computer-application-that-measures-active-undistracted-writing-time-across-a-three-month-period.",
-    "title": "Research",
-    "section": "This project examines how the timing of caffeine intake affects daily concentration levels and personal focus windows. The data generating process involves daily coffee logs specifically recording teh excact time of consumption and ounces drank alongside an automated computer application that measures active, undistracted writing time across a three month period.",
-    "text": "This project examines how the timing of caffeine intake affects daily concentration levels and personal focus windows. The data generating process involves daily coffee logs specifically recording teh excact time of consumption and ounces drank alongside an automated computer application that measures active, undistracted writing time across a three month period."
+    "objectID": "assign01.html",
+    "href": "assign01.html",
+    "title": "Assignment 1: Designing My Website",
+    "section": "",
+    "text": "This website is created using RStudio Quarto. It is a Quarto website project where each page is a .qmd file, and the _quarto.yml file sets the title, theme and navigation bar. When the site is rendered, Quarto builds the pages into the docs folder, and GitHub Pages publishes them from there.\nThe Cosmo theme is used for a professional look. It is clean and easy to read, with a white background, a light navigation bar and blue links. There is also a styles.css file in case I want to change the look later, and the table of contents is turned on so pages with sections show a list of them on the right.\nThe navigation bar includes four links connecting to my content in different areas. Home is the welcome page. Research describes my project on coffee consumption and daily productivity cycles. CV has my curriculum vitae. Assignments is a drop-down menu for my EPPS 6302 coursework, and this note is under Assignment 1. I used a drop-down for assignments so the navigation bar doesn’t get crowded as more assignments are added during the semester. The site title on the left goes back to the home page, and the search icon on the right searches the whole site.\nI kept the design simple. Every page uses the same theme and navigation bar, so the site looks the same throughout and is easy to move around.\nThe website is hosted on GitHub Pages from my repository tynshanaboone.github.io, and it is live at https://tynshanaboone.github.io. When I update a page, I render the site again in RStudio and upload the new files to GitHub."
   }
 ]

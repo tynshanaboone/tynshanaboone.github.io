@@ -1,0 +1,7 @@
+---
+title: "Research"
+---
+
+### Project: Coffee Consumption and Daily Productivity Cycles
+
+This project examines how the timing of caffeine intake affects daily concentration levels and personal focus windows. The data generating process involves daily coffee logs specifically recording the exact time of consumption and the ounces consumed, alongside an automated computer application that measures active, undistracted writing time across a three-month period.

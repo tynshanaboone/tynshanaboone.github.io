@@ -1,0 +1,5 @@
+---
+title: "Tynshana Boone"
+---
+
+Welcome to my personal website. Here you can find my [CV](cv.qmd), my [research](research.qmd), and my coursework for EPPS 6302 Methods of Data Collection and Production under the Assignments menu.
