@@ -182,10 +182,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
   <li><a href="#variables" id="toc-variables" class="nav-link" data-scroll-target="#variables">Variables</a></li>
   <li><a href="#download" id="toc-download" class="nav-link" data-scroll-target="#download">Download</a></li>
-  <li><a href="#map" id="toc-map" class="nav-link" data-scroll-target="#map">Map</a></li>
-  <li><a href="#table" id="toc-table" class="nav-link" data-scroll-target="#table">Table</a></li>
-  <li><a href="#uncertainty-check" id="toc-uncertainty-check" class="nav-link" data-scroll-target="#uncertainty-check">Uncertainty check</a></li>
-  <li><a href="#methods-note" id="toc-methods-note" class="nav-link" data-scroll-target="#methods-note">Methods note</a></li>
+  <li><a href="#a.-map" id="toc-a.-map" class="nav-link" data-scroll-target="#a.-map">a. Map</a></li>
+  <li><a href="#b.-table" id="toc-b.-table" class="nav-link" data-scroll-target="#b.-table">b. Table</a></li>
+  <li><a href="#c.-uncertainty-check" id="toc-c.-uncertainty-check" class="nav-link" data-scroll-target="#c.-uncertainty-check">c.&nbsp;Uncertainty check</a></li>
+  <li><a href="#d.-methods-note" id="toc-d.-methods-note" class="nav-link" data-scroll-target="#d.-methods-note">d.&nbsp;Methods note</a></li>
   </ul>
 </nav>
     </div>
@@ -212,9 +212,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>This page uses tidycensus to pull ACS 2024 5-year estimates for every county in Texas. It maps median household income and ranks counties by poverty rate, keeping the margin of error (MOE) next to every estimate in the table.</p>
+<p>The four deliverables are labeled below: (a) map, (b) table, (c) uncertainty check and (d) methods note. The code for each step is under “Show code”.</p>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
 <div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Packages</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidycensus)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tigris)</span>
@@ -228,14 +231,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 1) API key — run ONCE in the console, never in this file</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># census_api_key("YOUR_CENSUS_KEY", install = TRUE)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 </section>
 <section id="variables" class="level2">
 <h2 class="anchored" data-anchor-id="variables">Variables</h2>
 <div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) Explore variables (no `cache` argument — deprecated and ignored)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">load_variables</span>(<span class="dv">2024</span>, <span class="st">"acs5"</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>vars <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="fu">grepl</span>(<span class="st">"^B19"</span>, name)) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 10 × 4
    name        label                                concept            geography
@@ -253,6 +260,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3) Parameters (EDIT ME)</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>state_abbr <span class="ot">&lt;-</span> <span class="st">"TX"</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>geo_level  <span class="ot">&lt;-</span> <span class="st">"county"</span>   <span class="co"># options: state, county, tract, block group</span></span>
@@ -261,11 +270,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">povden =</span> <span class="st">"B17001_001"</span>)   <span class="co"># poverty universe = denominator</span></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>year_acs   <span class="ot">&lt;-</span> <span class="dv">2024</span></span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>survey     <span class="ot">&lt;-</span> <span class="st">"acs5"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 </section>
 <section id="download" class="level2">
 <h2 class="anchored" data-anchor-id="download">Download</h2>
 <div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4) Download, wide — one row per area, and the sf class survives</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>acs_wide <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography =</span> geo_level,</span>
@@ -281,11 +293,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>acs_wide <span class="ot">&lt;-</span> acs_wide <span class="sc">|&gt;</span></span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pov_rate =</span> povE <span class="sc">/</span> povdenE,</span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">pov_moe  =</span> <span class="fu">moe_prop</span>(povE, povdenE, povM, povdenM))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 </section>
-<section id="map" class="level2">
-<h2 class="anchored" data-anchor-id="map">Map</h2>
+<section id="a.-map" class="level2">
+<h2 class="anchored" data-anchor-id="a.-map">a. Map</h2>
 <div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 6) Map (edit titles/theme)</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(acs_wide) <span class="sc">+</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> incomeE), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
@@ -301,6 +316,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_blank</span>(),</span>
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"inside"</span>,</span>
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position.inside =</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.15</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -311,10 +327,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Incomes are highest in the suburban counties around Dallas, Houston, Austin and San Antonio, like Collin, Denton, Fort Bend, Williamson and Kendall. Rockwall County is the highest at $127,981 (± $4,257). They are lowest in South Texas, along and near the border, like Starr, Zapata and Zavala, and in some small rural counties. Swisher County is the lowest at $36,165, but its MOE is ± $14,512. A few small rural counties also show up bright, like Glasscock at $101,250, but with an MOE of ± $53,302. The shading for small counties is much less certain than for the big metro counties.</p>
 </section>
-<section id="table" class="level2">
-<h2 class="anchored" data-anchor-id="table">Table</h2>
+<section id="b.-table" class="level2">
+<h2 class="anchored" data-anchor-id="b.-table">b. Table</h2>
 <p>Top and bottom ten counties by poverty rate, with the MOE beside each estimate. ACS MOEs are at the 90% confidence level. The rate MOE is in percentage points and the count MOE is in people.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 7) Table (top/bottom by poverty rate, with MOE)</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>top10 <span class="ot">&lt;-</span> acs_wide <span class="sc">|&gt;</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>() <span class="sc">|&gt;</span></span>
@@ -338,11 +356,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"People below poverty"</span>, <span class="st">"MOE (± people)"</span>),</span>
 <span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                 <span class="at">format.args =</span> <span class="fu">list</span>(<span class="at">big.mark =</span> <span class="st">","</span>))</span>
 <span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table</span>(<span class="fu">bind_rows</span>(top10, bottom10)) <span class="sc">|&gt;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">pack_rows</span>(<span class="st">"Highest poverty rates"</span>, <span class="dv">1</span>, <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">pack_rows</span>(<span class="st">"Lowest poverty rates"</span>, <span class="dv">11</span>, <span class="dv">20</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -506,18 +528,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 8) Save outputs</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(<span class="fu">st_drop_geometry</span>(acs_wide),</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">paste0</span>(<span class="st">"acs_"</span>, state_abbr, <span class="st">"_"</span>, year_acs, <span class="st">".csv"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <p>The full tidy dataset is here: <a href="acs_TX_2024.csv">acs_TX_2024.csv</a>.</p>
 </section>
-<section id="uncertainty-check" class="level2">
-<h2 class="anchored" data-anchor-id="uncertainty-check">Uncertainty check</h2>
+<section id="c.-uncertainty-check" class="level2">
+<h2 class="anchored" data-anchor-id="c.-uncertainty-check">c.&nbsp;Uncertainty check</h2>
 <p>Dimmit County has the highest poverty rate in the table at 41.1% (± 8.9 points), so its 90% interval runs from 32.2% to 50.0%. Zapata County is second at 38.4% (± 6.0 points), from 32.4% to 44.4%. The two intervals overlap. Overlap is a rough check rather than a formal test, but here the gap between them is small next to both MOEs, so the data can’t tell us which county really has the higher rate. The table puts Dimmit County first, but a different sample could flip that order. The same is true for many other rows, especially small counties with wide MOEs, so the ranking is better read as high and low groups than as an exact order. Loving County is the extreme case: its 6.1% rests on 2 people out of 33, so its place in the table means very little.</p>
 </section>
-<section id="methods-note" class="level2">
-<h2 class="anchored" data-anchor-id="methods-note">Methods note</h2>
+<section id="d.-methods-note" class="level2">
+<h2 class="anchored" data-anchor-id="d.-methods-note">d.&nbsp;Methods note</h2>
 <p>I used counties because they cover all of Texas and most have samples large enough for usable estimates. Tracts would show more detail, but with much larger MOEs. I mapped median household income (B19013_001) and ranked counties by poverty rate: people below poverty (B17001_002) divided by the poverty universe (B17001_001), the people whose poverty status is determined. I used a rate because a count map mostly shows where people live, and I carried the rate’s MOE through with <code>moe_prop()</code> instead of dropping it.</p>
 <p>The MOEs here are at the 90% confidence level, and they change how I read the results. Large counties have small MOEs, so their estimates are precise: Collin County is 6.2% ± 0.4 points. Small counties have small samples and wide MOEs: Edwards County is 31.9% ± 23.2 points and Foard County is 5.6% ± 4.4 points. Many counties at the top and bottom of the ranking are small ones like these, so the extremes are where the estimates are least reliable. When two 90% intervals don’t overlap I read the gap as real, and when they overlap I treat the order as uncertain.</p>
 
