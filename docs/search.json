@@ -14,6 +14,62 @@
     "text": "Project: Coffee Consumption and Daily Productivity Cycles\nThis project examines how the timing of caffeine intake affects daily concentration levels and personal focus windows. The data generating process involves daily coffee logs specifically recording the exact time of consumption and the ounces consumed, alongside an automated computer application that measures active, undistracted writing time across a three-month period."
   },
   {
+    "objectID": "assign03.html",
+    "href": "assign03.html",
+    "title": "Assignment 3: ACS via tidycensus",
+    "section": "",
+    "text": "This page uses tidycensus to pull ACS 2024 5-year estimates for every county in Texas. It maps median household income and ranks counties by poverty rate, keeping the margin of error (MOE) next to every estimate."
+  },
+  {
+    "objectID": "assign03.html#setup",
+    "href": "assign03.html#setup",
+    "title": "Assignment 3: ACS via tidycensus",
+    "section": "Setup",
+    "text": "Setup\n\n# Packages\nlibrary(tidycensus)\nlibrary(tigris)\nlibrary(sf)\nlibrary(dplyr)\nlibrary(tidyr)\nlibrary(ggplot2)\nlibrary(readr)\n\noptions(tigris_use_cache = TRUE)\n\n# 1) API key — run ONCE in the console, never in this file\n# census_api_key(\"YOUR_CENSUS_KEY\", install = TRUE)"
+  },
+  {
+    "objectID": "assign03.html#variables",
+    "href": "assign03.html#variables",
+    "title": "Assignment 3: ACS via tidycensus",
+    "section": "Variables",
+    "text": "Variables\n\n# 2) Explore variables (no `cache` argument — deprecated and ignored)\nvars &lt;- load_variables(2024, \"acs5\")\nvars |&gt; dplyr::filter(grepl(\"^B19\", name)) |&gt; dplyr::slice_head(n = 10)\n\n# A tibble: 10 × 4\n   name        label                                concept            geography\n   &lt;chr&gt;       &lt;chr&gt;                                &lt;chr&gt;              &lt;chr&gt;    \n 1 B19001A_001 Estimate!!Total:                     Household Income … tract    \n 2 B19001A_002 Estimate!!Total:!!Less than $10,000  Household Income … tract    \n 3 B19001A_003 Estimate!!Total:!!$10,000 to $14,999 Household Income … tract    \n 4 B19001A_004 Estimate!!Total:!!$15,000 to $19,999 Household Income … tract    \n 5 B19001A_005 Estimate!!Total:!!$20,000 to $24,999 Household Income … tract    \n 6 B19001A_006 Estimate!!Total:!!$25,000 to $29,999 Household Income … tract    \n 7 B19001A_007 Estimate!!Total:!!$30,000 to $34,999 Household Income … tract    \n 8 B19001A_008 Estimate!!Total:!!$35,000 to $39,999 Household Income … tract    \n 9 B19001A_009 Estimate!!Total:!!$40,000 to $44,999 Household Income … tract    \n10 B19001A_010 Estimate!!Total:!!$45,000 to $49,999 Household Income … tract    \n\n\n\n# 3) Parameters (EDIT ME)\nstate_abbr &lt;- \"TX\"\ngeo_level  &lt;- \"county\"   # options: state, county, tract, block group\nmy_vars    &lt;- c(income = \"B19013_001\",   # median household income\n                pov    = \"B17001_002\",   # people below poverty\n                povden = \"B17001_001\")   # poverty universe = denominator\nyear_acs   &lt;- 2024\nsurvey     &lt;- \"acs5\""
+  },
+  {
+    "objectID": "assign03.html#download",
+    "href": "assign03.html#download",
+    "title": "Assignment 3: ACS via tidycensus",
+    "section": "Download",
+    "text": "Download\n\n# 4) Download, wide — one row per area, and the sf class survives\nacs_wide &lt;- get_acs(\n  geography = geo_level,\n  variables = my_vars,\n  state     = state_abbr,\n  year      = year_acs,\n  survey    = survey,\n  geometry  = TRUE,\n  output    = \"wide\"\n)\n\n# 5) Derive a rate, and carry its margin of error through\nacs_wide &lt;- acs_wide |&gt;\n  mutate(pov_rate = povE / povdenE,\n         pov_moe  = moe_prop(povE, povdenE, povM, povdenM))"
+  },
+  {
+    "objectID": "assign03.html#map",
+    "href": "assign03.html#map",
+    "title": "Assignment 3: ACS via tidycensus",
+    "section": "Map",
+    "text": "Map\n\n# 6) Map (edit titles/theme)\nggplot(acs_wide) +\n  geom_sf(aes(fill = incomeE), color = NA) +\n  scale_fill_viridis_c(name = \"Median HH Income\", labels = scales::label_dollar()) +\n  labs(title = paste0(\"ACS \", year_acs, \" 5-year: Median Income — \",\n                      state_abbr, \" (\", geo_level, \")\"),\n       caption = \"Source: U.S. Census Bureau via tidycensus\") +\n  theme_minimal() +\n  theme(text = element_text(family = \"Palatino\"),   # drop if not installed\n        plot.title = element_text(size = 14, face = \"bold\"),\n        plot.caption = element_text(size = 8),\n        legend.position = \"inside\",\n        legend.position.inside = c(0.2, 0.15))\n\n\n\n\n\n\n\n\nIncomes are highest in the suburban counties around Dallas, Houston and Austin, like Collin, Denton, Fort Bend and Williamson. Rockwall County is the highest at $127,981 (± $4,257). They are lowest along the border, like Starr, Zapata and Zavala, and in some small rural counties. Swisher County is the lowest at $36,165, but its MOE is ± $14,512, so the shading for small counties like this is much less certain than for the big metro counties."
+  },
+  {
+    "objectID": "assign03.html#table",
+    "href": "assign03.html#table",
+    "title": "Assignment 3: ACS via tidycensus",
+    "section": "Table",
+    "text": "Table\nTop and bottom ten counties by poverty rate, with the MOE beside each estimate (ACS MOEs are at the 90% confidence level).\n\n# 7) Table (top/bottom by poverty rate, with MOE)\ntop10 &lt;- acs_wide |&gt;\n  st_drop_geometry() |&gt;\n  arrange(desc(pov_rate)) |&gt;\n  select(NAME, pov_rate, pov_moe, povE, povM) |&gt;\n  slice_head(n = 10)\n\nbottom10 &lt;- acs_wide |&gt;\n  st_drop_geometry() |&gt;\n  arrange(pov_rate) |&gt;\n  select(NAME, pov_rate, pov_moe, povE, povM) |&gt;\n  slice_head(n = 10)\n\nshow_table &lt;- function(x) {\n  x |&gt;\n    mutate(NAME = sub(\" County, Texas\", \"\", NAME),\n           pov_rate = round(100 * pov_rate, 1),\n           pov_moe  = round(100 * pov_moe, 1)) |&gt;\n    knitr::kable(format = \"html\",\n                 col.names = c(\"County\", \"Poverty rate (%)\", \"MOE (±)\",\n                               \"People below poverty\", \"MOE (±)\"),\n                 format.args = list(big.mark = \",\"))\n}\n\n\nshow_table(bind_rows(top10, bottom10)) |&gt;\n  kableExtra::pack_rows(\"Highest poverty rates\", 1, 10) |&gt;\n  kableExtra::pack_rows(\"Lowest poverty rates\", 11, 20)\n\n\n\n\nCounty\nPoverty rate (%)\nMOE (±)\nPeople below poverty\nMOE (±)\n\n\n\n\nHighest poverty rates\n\n\nDimmit\n41.1\n8.9\n3,390\n732\n\n\nZapata\n38.4\n6.0\n5,190\n818\n\n\nZavala\n33.9\n9.5\n3,174\n892\n\n\nStarr\n33.5\n3.2\n21,981\n2,118\n\n\nDuval\n33.3\n8.4\n3,013\n761\n\n\nPresidio\n32.0\n12.8\n1,896\n757\n\n\nEdwards\n31.9\n23.2\n398\n304\n\n\nJim Hogg\n31.4\n11.1\n1,451\n515\n\n\nSwisher\n30.1\n6.9\n1,901\n436\n\n\nKleberg\n28.1\n4.3\n8,077\n1,250\n\n\nLowest poverty rates\n\n\nRockwall\n4.0\n0.7\n4,949\n843\n\n\nSterling\n4.3\n2.9\n62\n42\n\n\nSutton\n4.5\n2.9\n147\n93\n\n\nKendall\n5.0\n1.4\n2,405\n685\n\n\nArmstrong\n5.2\n2.8\n92\n50\n\n\nFoard\n5.6\n4.4\n52\n42\n\n\nRoberts\n5.6\n3.9\n47\n33\n\n\nLoving\n6.1\n2.5\n2\n2\n\n\nHemphill\n6.2\n3.2\n197\n103\n\n\nCollin\n6.2\n0.4\n71,971\n4,097\n\n\n\n\n\n\n# 8) Save outputs\nwrite_csv(st_drop_geometry(acs_wide),\n          paste0(\"acs_\", state_abbr, \"_\", year_acs, \".csv\"))\n\nThe full tidy dataset is here: acs_TX_2024.csv."
+  },
+  {
+    "objectID": "assign03.html#uncertainty-check",
+    "href": "assign03.html#uncertainty-check",
+    "title": "Assignment 3: ACS via tidycensus",
+    "section": "Uncertainty check",
+    "text": "Uncertainty check\nDimmit County has the highest poverty rate in the table at 41.1% (± 8.9), so its interval runs from 32.2% to 50.0%. Zapata County is second at 38.4% (± 6.0), from 32.4% to 44.4%. The two intervals overlap, so the data can’t tell us which county really has the higher rate. The table puts Dimmit County first, but a different sample could flip that order. The same is true for many other rows, especially small counties with wide MOEs, so the ranking is better read as high and low groups than as an exact order."
+  },
+  {
+    "objectID": "assign03.html#methods-note",
+    "href": "assign03.html#methods-note",
+    "title": "Assignment 3: ACS via tidycensus",
+    "section": "Methods note",
+    "text": "Methods note\nI used counties because they cover all of Texas and most have samples large enough for usable estimates. Tracts would show more detail, but with much larger MOEs. I mapped median household income (B19013_001) and ranked counties by poverty rate: people below poverty (B17001_002) divided by the poverty universe (B17001_001). I used a rate because a count map mostly shows where people live, and I carried the rate’s MOE through with moe_prop() instead of dropping it.\nThe MOEs here are at the 90% confidence level, and they change how I read the results. Large counties have small MOEs, so their estimates are precise. Collin County is 6.2% ± 0.4. Small counties have small samples and wide MOEs. Edwards County is 31.9% ± 23.2 and Foard County is 5.6% ± 4.4. Many counties at the top and bottom of the ranking are small ones like these, so the extremes are where the estimates are least reliable. I treat differences of a few points between small counties as sampling error, and only read a gap as real when the 90% intervals don’t overlap."
+  },
+  {
     "objectID": "assign01.html",
     "href": "assign01.html",
     "title": "Assignment 1: Designing My Website",

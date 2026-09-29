@@ -1,0 +1,158 @@
+---
+title: "Assignment 3: ACS via tidycensus"
+execute:
+  message: false
+  warning: false
+---
+
+This page uses tidycensus to pull ACS 2024 5-year estimates for every county in Texas. It maps median household income and ranks counties by poverty rate, keeping the margin of error (MOE) next to every estimate.
+
+## Setup
+
+```{r}
+# Packages
+library(tidycensus)
+library(tigris)
+library(sf)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+
+options(tigris_use_cache = TRUE)
+
+# 1) API key — run ONCE in the console, never in this file
+# census_api_key("YOUR_CENSUS_KEY", install = TRUE)
+```
+
+## Variables
+
+```{r}
+# 2) Explore variables (no `cache` argument — deprecated and ignored)
+vars <- load_variables(2024, "acs5")
+vars |> dplyr::filter(grepl("^B19", name)) |> dplyr::slice_head(n = 10)
+```
+
+```{r}
+# 3) Parameters (EDIT ME)
+state_abbr <- "TX"
+geo_level  <- "county"   # options: state, county, tract, block group
+my_vars    <- c(income = "B19013_001",   # median household income
+                pov    = "B17001_002",   # people below poverty
+                povden = "B17001_001")   # poverty universe = denominator
+year_acs   <- 2024
+survey     <- "acs5"
+```
+
+## Download
+
+```{r}
+# 4) Download, wide — one row per area, and the sf class survives
+acs_wide <- get_acs(
+  geography = geo_level,
+  variables = my_vars,
+  state     = state_abbr,
+  year      = year_acs,
+  survey    = survey,
+  geometry  = TRUE,
+  output    = "wide"
+)
+
+# 5) Derive a rate, and carry its margin of error through
+acs_wide <- acs_wide |>
+  mutate(pov_rate = povE / povdenE,
+         pov_moe  = moe_prop(povE, povdenE, povM, povdenM))
+```
+
+## Map
+
+```{r}
+#| fig-width: 7
+#| fig-height: 7
+# 6) Map (edit titles/theme)
+ggplot(acs_wide) +
+  geom_sf(aes(fill = incomeE), color = NA) +
+  scale_fill_viridis_c(name = "Median HH Income", labels = scales::label_dollar()) +
+  labs(title = paste0("ACS ", year_acs, " 5-year: Median Income — ",
+                      state_abbr, " (", geo_level, ")"),
+       caption = "Source: U.S. Census Bureau via tidycensus") +
+  theme_minimal() +
+  theme(text = element_text(family = "Palatino"),   # drop if not installed
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.caption = element_text(size = 8),
+        legend.position = "inside",
+        legend.position.inside = c(0.2, 0.15))
+```
+
+```{r}
+#| echo: false
+dollars <- function(x) scales::label_dollar()(x)
+by_income <- acs_wide |> st_drop_geometry() |> arrange(desc(incomeE))
+hi <- by_income[1, ]
+lo <- by_income[nrow(by_income), ]
+```
+
+Incomes are highest in the suburban counties around Dallas, Houston and Austin, like Collin, Denton, Fort Bend and Williamson. `r sub(", Texas", "", hi$NAME)` is the highest at `r dollars(hi$incomeE)` (± `r dollars(hi$incomeM)`). They are lowest along the border, like Starr, Zapata and Zavala, and in some small rural counties. `r sub(", Texas", "", lo$NAME)` is the lowest at `r dollars(lo$incomeE)`, but its MOE is ± `r dollars(lo$incomeM)`, so the shading for small counties like this is much less certain than for the big metro counties.
+
+## Table
+
+Top and bottom ten counties by poverty rate, with the MOE beside each estimate (ACS MOEs are at the 90% confidence level).
+
+```{r}
+# 7) Table (top/bottom by poverty rate, with MOE)
+top10 <- acs_wide |>
+  st_drop_geometry() |>
+  arrange(desc(pov_rate)) |>
+  select(NAME, pov_rate, pov_moe, povE, povM) |>
+  slice_head(n = 10)
+
+bottom10 <- acs_wide |>
+  st_drop_geometry() |>
+  arrange(pov_rate) |>
+  select(NAME, pov_rate, pov_moe, povE, povM) |>
+  slice_head(n = 10)
+
+show_table <- function(x) {
+  x |>
+    mutate(NAME = sub(" County, Texas", "", NAME),
+           pov_rate = round(100 * pov_rate, 1),
+           pov_moe  = round(100 * pov_moe, 1)) |>
+    knitr::kable(format = "html",
+                 col.names = c("County", "Poverty rate (%)", "MOE (±)",
+                               "People below poverty", "MOE (±)"),
+                 format.args = list(big.mark = ","))
+}
+```
+
+```{r}
+show_table(bind_rows(top10, bottom10)) |>
+  kableExtra::pack_rows("Highest poverty rates", 1, 10) |>
+  kableExtra::pack_rows("Lowest poverty rates", 11, 20)
+```
+
+```{r}
+# 8) Save outputs
+write_csv(st_drop_geometry(acs_wide),
+          paste0("acs_", state_abbr, "_", year_acs, ".csv"))
+```
+
+The full tidy dataset is here: [acs_TX_2024.csv](acs_TX_2024.csv).
+
+## Uncertainty check
+
+```{r}
+#| echo: false
+pct <- function(x) formatC(100 * x, format = "f", digits = 1)
+a <- top10[1, ]
+b <- top10[2, ]
+a_name <- sub(", Texas", "", a$NAME)
+b_name <- sub(", Texas", "", b$NAME)
+```
+
+`r a_name` has the highest poverty rate in the table at `r pct(a$pov_rate)`% (± `r pct(a$pov_moe)`), so its interval runs from `r pct(a$pov_rate - a$pov_moe)`% to `r pct(a$pov_rate + a$pov_moe)`%. `r b_name` is second at `r pct(b$pov_rate)`% (± `r pct(b$pov_moe)`), from `r pct(b$pov_rate - b$pov_moe)`% to `r pct(b$pov_rate + b$pov_moe)`%. The two intervals overlap, so the data can't tell us which county really has the higher rate. The table puts `r a_name` first, but a different sample could flip that order. The same is true for many other rows, especially small counties with wide MOEs, so the ranking is better read as high and low groups than as an exact order.
+
+## Methods note
+
+I used counties because they cover all of Texas and most have samples large enough for usable estimates. Tracts would show more detail, but with much larger MOEs. I mapped median household income (B19013_001) and ranked counties by poverty rate: people below poverty (B17001_002) divided by the poverty universe (B17001_001). I used a rate because a count map mostly shows where people live, and I carried the rate's MOE through with `moe_prop()` instead of dropping it.
+
+The MOEs here are at the 90% confidence level, and they change how I read the results. Large counties have small MOEs, so their estimates are precise. Collin County is 6.2% ± 0.4. Small counties have small samples and wide MOEs. Edwards County is 31.9% ± 23.2 and Foard County is 5.6% ± 4.4. Many counties at the top and bottom of the ranking are small ones like these, so the extremes are where the estimates are least reliable. I treat differences of a few points between small counties as sampling error, and only read a gap as real when the 90% intervals don't overlap.

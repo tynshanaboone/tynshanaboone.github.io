@@ -14,11 +14,16 @@ website:
         menu:
           - href: assign01.qmd
             text: Assignment 1
+          - href: assign03.qmd
+            text: Assignment 3
 
 format:
   html:
     theme: cosmo
     css: styles.css
     toc: true
+
+execute:
+  freeze: auto
 
 editor: visual
