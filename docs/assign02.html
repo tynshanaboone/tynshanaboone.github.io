@@ -177,11 +177,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#datasheet" id="toc-datasheet" class="nav-link active" data-scroll-target="#datasheet">Datasheet</a></li>
-  <li><a href="#the-website-data" id="toc-the-website-data" class="nav-link" data-scroll-target="#the-website-data">The website data</a></li>
-  <li><a href="#the-r-data" id="toc-the-r-data" class="nav-link" data-scroll-target="#the-r-data">The R data</a></li>
-  <li><a href="#a-note-on-terms" id="toc-a-note-on-terms" class="nav-link" data-scroll-target="#a-note-on-terms">A note on terms</a></li>
-  <li><a href="#comparing-the-two-methods" id="toc-comparing-the-two-methods" class="nav-link" data-scroll-target="#comparing-the-two-methods">Comparing the two methods</a></li>
+  <li><a href="#ac.-datasheet" id="toc-ac.-datasheet" class="nav-link active" data-scroll-target="#ac.-datasheet">1a–c.&nbsp;Datasheet</a></li>
+  <li><a href="#the-website-data" id="toc-the-website-data" class="nav-link" data-scroll-target="#the-website-data">2. The website data</a></li>
+  <li><a href="#ab.-the-r-data" id="toc-ab.-the-r-data" class="nav-link" data-scroll-target="#ab.-the-r-data">3a–b. The R data</a></li>
+  <li><a href="#note-on-terms-ab" id="toc-note-on-terms-ab" class="nav-link" data-scroll-target="#note-on-terms-ab">Note on terms (a–b)</a></li>
+  <li><a href="#comparing-the-two-methods" id="toc-comparing-the-two-methods" class="nav-link" data-scroll-target="#comparing-the-two-methods">4. Comparing the two methods</a></li>
   </ul>
 </nav>
     </div>
@@ -226,8 +226,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>r_log <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_pull_log.csv"</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<section id="datasheet" class="level2">
-<h2 class="anchored" data-anchor-id="datasheet">Datasheet</h2>
+<p>Answers are labeled with the question numbers from the assignment.</p>
+<section id="ac.-datasheet" class="level2">
+<h2 class="anchored" data-anchor-id="ac.-datasheet">1a–c.&nbsp;Datasheet</h2>
 <p>Every pull, recorded at the time it was made. Times are UTC.</p>
 <p><strong>Website pulls</strong></p>
 <div class="cell">
@@ -415,7 +416,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 <section id="the-website-data" class="level2">
-<h2 class="anchored" data-anchor-id="the-website-data">The website data</h2>
+<h2 class="anchored" data-anchor-id="the-website-data">2. The website data</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -429,13 +430,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>iran <span class="ot">&lt;-</span> <span class="fu">arrange</span>(web4, <span class="fu">desc</span>(<span class="fu">num</span>(hits)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p><strong>Dates and interval.</strong> The five-year file runs weekly from September 26, 2021 to September 27, 2026 (262 weeks). The 90-day file runs daily from June 29, 2026 to September 29, 2026 (93 days), so the interval changes with the window. In both, the last week or day was still in progress when I pulled it.</p>
-<p><strong>Units.</strong> These are not search counts. Each point is a share of all searches in that place and time, rescaled so the highest point in the query is 100. A 0 means the volume was too low to show, and “&lt;1” means some interest but under 1 (<a href="https://support.google.com/trends/answer/4365533">Google</a>).</p>
-<p><strong>Removing a term.</strong> With Election dropped, the other two terms changed. Trump’s top value went from 26 to 100, and none of its 262 weeks kept the same number. Kamala Harris’s top value went from 7 to 26, and only 228 of 262 weeks stayed the same, mostly the “&lt;1” weeks. Election’s spike had set the 100, so without it everything was rescaled. The numbers only compare within one query.</p>
-<p><strong>My own term.</strong> “USA Iran war” peaks the week of March 1, 2026. Outside March 2026, its biggest spike is 51 the week of June 22, 2025, around the US strikes on Iranian nuclear sites. It is 0 in 121 of 262 weeks, 102 of them before 2025, and has been above zero every week since January 2026. It only counts searches with all three words, so it misses people who typed “Iran war”.</p>
+<p><strong>2a–b. Dates and interval.</strong> The five-year file runs weekly from September 26, 2021 to September 27, 2026 (262 weeks). The 90-day file runs daily from June 29, 2026 to September 29, 2026 (93 days), so the interval changes with the window. In both, the last week or day was still in progress when I pulled it.</p>
+<p><strong>2c. Units.</strong> These are not search counts. Each point is a share of all searches in that place and time, rescaled so the highest point in the query is 100. A 0 means the volume was too low to show, and “&lt;1” means some interest but under 1 (<a href="https://support.google.com/trends/answer/4365533">Google</a>).</p>
+<p><strong>2d. Removing a term.</strong> With Election dropped, the other two terms changed. Trump’s top value went from 26 to 100, and none of its 262 weeks kept the same number. Kamala Harris’s top value went from 7 to 26, and only 228 of 262 weeks stayed the same, mostly the “&lt;1” weeks. Election’s spike had set the 100, so without it everything was rescaled. The numbers only compare within one query.</p>
+<p><strong>1d. My own term.</strong> “USA Iran war” peaks the week of March 1, 2026. Outside March 2026, its biggest spike is 51 the week of June 22, 2025, around the US strikes on Iranian nuclear sites. It is 0 in 121 of 262 weeks, 102 of them before 2025, and has been above zero every week since January 2026. It only counts searches with all three words, so it misses people who typed “Iran war”.</p>
 </section>
-<section id="the-r-data" class="level2">
-<h2 class="anchored" data-anchor-id="the-r-data">The R data</h2>
+<section id="ab.-the-r-data" class="level2">
+<h2 class="anchored" data-anchor-id="ab.-the-r-data">3a–b. The R data</h2>
 <p>I ran the calls until each one succeeded, cached the results, and this page works from the saved files. Every attempt is in <a href="data/gtrends/r_pull_log.csv">r_pull_log.csv</a>, and the full script is <a href="data/gtrends/pull_gtrends.R">pull_gtrends.R</a>. The code below is the assignment’s first call and the rest of gtrendsR01.R, adapted to save each result.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gtrendsR)</span>
@@ -482,10 +483,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p>Over its full history “tariff” is monthly from 2004 and peaks in April 2025. It peaks in the same month in Great Britain on its own. Pulled for the US, GB and Taiwan together, the US sets the 100, with GB at 58 and Taiwan at 36 at their highest. My copy of the script has no numbered sections, so I took “section 6” as the <code>names(tct)</code> step and “section 7” as running the first call twice.</p>
-<p><strong>What the website CSV did not give me.</strong> <code>names(tct)</code> lists seven data frames. The timeline CSV I downloaded only had interest over time. It had nothing by country, region, DMA (US media market) or city, and no related topics or queries. The website offers some of these as separate downloads, but one R call returns them all. For this worldwide query the region and related topics frames came back empty, and the other five had data.</p>
+<p><strong>3c. What the website CSV did not give me.</strong> <code>names(tct)</code> lists seven data frames. The timeline CSV I downloaded only had interest over time. It had nothing by country, region, DMA (US media market) or city, and no related topics or queries. The website offers some of these as separate downloads, but one R call returns them all. For this worldwide query the region and related topics frames came back empty, and the other five had data.</p>
 </section>
-<section id="a-note-on-terms" class="level2">
-<h2 class="anchored" data-anchor-id="a-note-on-terms">A note on terms</h2>
+<section id="note-on-terms-ab" class="level2">
+<h2 class="anchored" data-anchor-id="note-on-terms-ab">Note on terms (a–b)</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -520,7 +521,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>They are not the same. “Harris” peaks the week of November 3, 2024, election week, while “Kamala Harris” peaks the week of July 21, 2024, when Biden dropped out and she became the likely nominee. The two peaks are close in both series, so that order could flip in another sample. Relative to its own peak, “Harris” also stays higher the rest of the time (median 7 vs 1), likely because it also picks up the county, the supermarket and everyone else named Harris. That gap is the difference between a term and a concept. “Harris” measures interest in Kamala Harris plus other things, so the wording decides what I end up measuring.</p>
 </section>
 <section id="comparing-the-two-methods" class="level2">
-<h2 class="anchored" data-anchor-id="comparing-the-two-methods">Comparing the two methods</h2>
+<h2 class="anchored" data-anchor-id="comparing-the-two-methods">4. Comparing the two methods</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -558,12 +559,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p><strong>Are the numbers identical?</strong> Yes. I ran the exact website query in R (Kamala Harris, not Harris), and all 786 of 786 values match, with no gap in either direction. The script’s own query with “Harris” also matches the website exactly for Trump (262 of 262) and election (262 of 262), because election’s spike sets the 100 in both. Only the Harris column differs.</p>
-<p><strong>Reproducibility.</strong> Neither method lets someone else regenerate my file exactly. “Past 5 years” is a moving window, so the same settings cover different weeks tomorrow, and Trends is built from a sample. The R code makes re-running easy, but only my cached files hold these exact numbers.</p>
-<p><strong>Provenance.</strong> R records the query for me: every row carries the keyword, geography, window, search type and category. It does not record when it ran, and “today+5-y” does not say which five years, so I logged the pull times myself. The website CSV only notes the category and geography, so I had to write down everything else in the datasheet.</p>
-<p><strong>Scale.</strong> Both allow five terms per query. Fifty terms means at least ten separate searches, each on its own 0-100 scale. In R that is a loop, but the rescaling problem stays, and fifty requests run into rate limits.</p>
-<p><strong>Fragility.</strong> gtrendsR scrapes a service with no general public API. Of my first nine calls, 3 failed and worked a few minutes later. I knew because R threw an error. If Google quietly changed its scaling, nothing would error. On the website, a wrong setting or a changed page layout only gets caught if every choice was recorded.</p>
-<p><strong>Same call twice.</strong> Run again 4 minutes later, the first call returned the same numbers, 786 of 786 values, so Google appears to reuse the same sample over a short window. That does not prove the data is stable. Trends is a sample, and my test only covered a few minutes. Every finding from this source needs its exact query and pull time, and should come from a saved file, not a fresh call.</p>
+<p><strong>4a. Are the numbers identical?</strong> Yes. I ran the exact website query in R (Kamala Harris, not Harris), and all 786 of 786 values match, with no gap in either direction. The script’s own query with “Harris” also matches the website exactly for Trump (262 of 262) and election (262 of 262), because election’s spike sets the 100 in both. Only the Harris column differs.</p>
+<p><strong>4b(i). Reproducibility.</strong> Neither method lets someone else regenerate my file exactly. “Past 5 years” is a moving window, so the same settings cover different weeks tomorrow, and Trends is built from a sample. The R code makes re-running easy, but only my cached files hold these exact numbers.</p>
+<p><strong>4b(ii). Provenance.</strong> R records the query for me: every row carries the keyword, geography, window, search type and category. It does not record when it ran, and “today+5-y” does not say which five years, so I logged the pull times myself. The website CSV only notes the category and geography, so I had to write down everything else in the datasheet.</p>
+<p><strong>4b(iii). Scale.</strong> Both allow five terms per query. Fifty terms means at least ten separate searches, each on its own 0-100 scale. In R that is a loop, but the rescaling problem stays, and fifty requests run into rate limits.</p>
+<p><strong>4b(iv). Fragility.</strong> gtrendsR scrapes a service with no general public API. Of my first nine calls, 3 failed and worked a few minutes later. I knew because R threw an error. If Google quietly changed its scaling, nothing would error. On the website, a wrong setting or a changed page layout only gets caught if every choice was recorded.</p>
+<p><strong>4c. Same call twice.</strong> Run again 4 minutes later, the first call returned the same numbers, 786 of 786 values, so Google appears to reuse the same sample over a short window. That does not prove the data is stable. Trends is a sample, and my test only covered a few minutes. Every finding from this source needs its exact query and pull time, and should come from a saved file, not a fresh call.</p>
 
 
 </section>
