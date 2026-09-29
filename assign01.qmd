@@ -10,4 +10,4 @@ The navigation bar includes four links connecting to my content in different are
 
 I kept the design simple. Every page uses the same theme and navigation bar, so the site looks the same throughout and is easy to move around.
 
-The website is hosted on GitHub Pages from my repository tynshanaboone.github.io, and it is live at https://tynshanaboone.github.io. When I update a page, I render the site again in RStudio and upload the new files to GitHub.
+The website is hosted on GitHub Pages from my repository tynshanaboone.github.io, and it is live at https://tynshanaboone.github.io. When I update a page, I render the site again in RStudio and send the updated files to GitHub.

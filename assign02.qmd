@@ -1,0 +1,192 @@
+---
+title: "Assignment 2: Google Trends Two Ways"
+execute:
+  message: false
+  warning: false
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
+---
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+dir <- "data/gtrends"
+num <- function(x) as.numeric(ifelse(x == "<1", "0.5", x))   # "<1" treated as 0.5
+day <- function(d) paste0(format(as.Date(d), "%B "), as.integer(format(as.Date(d), "%d")), format(as.Date(d), ", %Y"))
+read_web <- function(f, terms) {
+  x <- read_csv(file.path(dir, f), skip = 2, col_types = cols(.default = "c"))
+  names(x) <- c("date", terms)
+  x |> pivot_longer(-date, names_to = "keyword", values_to = "hits") |> mutate(date = as.Date(date))
+}
+r_log <- read_csv(file.path(dir, "r_pull_log.csv"), show_col_types = FALSE)
+```
+
+## Datasheet
+
+Every pull, recorded at the time it was made. Times are UTC.
+
+**Website pulls**
+
+```{r}
+read_csv(file.path(dir, "pull_log.csv"), show_col_types = FALSE) |>
+  knitr::kable(col.names = c("File", "Search terms", "Geography", "Time window",
+                             "Category", "Search type", "Pulled (UTC)"))
+```
+
+**R pulls** (the ones used on this page)
+
+```{r}
+used <- c("trump_harris_election_us_5y", "trump_kamalaharris_election_us_5y",
+          "tariff_all", "tariff_gb_all", "tariff_us_gb_tw_all", "tct_all",
+          "harris_us_5y", "kamalaharris_us_5y", "trump_harris_election_us_5y_repeat2")
+lapply(used, function(n) {
+  x <- readRDS(file.path(dir, paste0("r_", n, ".rds")))$interest_over_time
+  tibble(`Search terms` = paste(unique(x$keyword), collapse = ", "),
+         Geography = paste(unique(x$geo), collapse = ", "),
+         `Time window` = unique(x$time), `Search type` = unique(x$gprop),
+         Category = unique(x$category),
+         `Pulled (UTC)` = format(max(r_log$pulled_utc[r_log$name == n & r_log$ok]), "%Y-%m-%d %H:%M:%S"))
+}) |> bind_rows() |> knitr::kable()
+```
+
+## The website data
+
+```{r}
+web1 <- read_web("web1_trump_kamalaharris_election_us_5y.csv", c("Trump", "Kamala Harris", "Election"))
+web2 <- read_web("web2_trump_kamalaharris_election_us_90d.csv", c("Trump", "Kamala Harris", "Election"))
+web3 <- read_web("web3_trump_kamalaharris_us_5y.csv", c("Trump", "Kamala Harris"))
+web4 <- read_web("web4_usairanwar_us_5y.csv", "USA Iran war")
+drop <- inner_join(web1, web3, by = c("date", "keyword"), suffix = c("_with", "_without"))
+tr <- filter(drop, keyword == "Trump")
+kh <- filter(drop, keyword == "Kamala Harris")
+iran <- arrange(web4, desc(num(hits)))
+```
+
+**Dates and interval.** The five-year file runs weekly from `r day(min(web1$date))` to `r day(max(web1$date))` (`r n_distinct(web1$date)` weeks). The 90-day file runs daily from `r day(min(web2$date))` to `r day(max(web2$date))` (`r n_distinct(web2$date)` days), so the interval changes with the window. In both, the last week or day was still in progress when I pulled it.
+
+**Units.** These are not search counts. Each point is a share of all searches in that place and time, rescaled so the highest point in the query is 100. A 0 means the volume was too low to show, and "<1" means some interest but under 1 ([Google](https://support.google.com/trends/answer/4365533)).
+
+**Removing a term.** With Election dropped, the other two terms changed. Trump's top value went from `r max(num(tr$hits_with))` to `r max(num(tr$hits_without))`, and none of its `r nrow(tr)` weeks kept the same number. Kamala Harris's top value went from `r max(num(kh$hits_with))` to `r max(num(kh$hits_without))`, and only `r sum(kh$hits_with == kh$hits_without)` of `r nrow(kh)` weeks stayed the same, mostly the "<1" weeks. Election's spike had set the 100, so without it everything was rescaled. The numbers only compare within one query.
+
+**My own term.** "USA Iran war" peaks the week of `r day(iran$date[1])`. Outside March 2026, its biggest spike is `r iran$hits[3]` the week of `r day(iran$date[3])`, around the US strikes on Iranian nuclear sites. It is 0 in `r sum(web4$hits == "0")` of `r nrow(web4)` weeks, `r sum(web4$hits == "0" & web4$date < as.Date("2025-01-01"))` of them before 2025, and has been above zero every week since January 2026. It only counts searches with all three words, so it misses people who typed "Iran war".
+
+## The R data
+
+I ran the calls until each one succeeded, cached the results, and this page works from the saved files. Every attempt is in [r_pull_log.csv](data/gtrends/r_pull_log.csv), and the full script is [pull_gtrends.R](data/gtrends/pull_gtrends.R). The code below is the assignment's first call and the rest of gtrendsR01.R, adapted to save each result.
+
+```{r}
+#| eval: false
+#| code-fold: false
+library(gtrendsR)
+library(readr)
+
+TrumpHarrisElection <- gtrends(c("Trump", "Harris", "election"),
+                               onlyInterest = TRUE,
+                               geo          = "US",
+                               gprop        = "web",
+                               time         = "today+5-y",   # last five years
+                               category     = 0)
+the_df <- TrumpHarrisElection$interest_over_time
+plot(TrumpHarrisElection)
+
+# Cache the raw pull - the next call will not return the same numbers
+write_csv(the_df, paste0("gtrends_us_5y_", Sys.Date(), ".csv"))
+
+# Rest of gtrendsR01.R (adapted)
+tg <- gtrends("tariff", time = "all")
+gtrends("tariff", geo = "GB", time = "all")
+gtrends("tariff", geo = c("US", "GB", "TW"), time = "all")
+tct <- gtrends(c("tariff", "China military", "Taiwan"), time = "all")
+names(tct)
+```
+
+```{r}
+#| code-fold: false
+r_first  <- readRDS(file.path(dir, "r_trump_harris_election_us_5y.rds"))
+r_repeat <- readRDS(file.path(dir, "r_trump_harris_election_us_5y_repeat2.rds"))
+r_match  <- readRDS(file.path(dir, "r_trump_kamalaharris_election_us_5y.rds"))
+tg       <- readRDS(file.path(dir, "r_tariff_all.rds"))
+tgb      <- readRDS(file.path(dir, "r_tariff_us_gb_tw_all.rds"))
+tct      <- readRDS(file.path(dir, "r_tct_all.rds"))
+names(tct)
+```
+
+```{r}
+tg_iot <- tg$interest_over_time
+geo_max <- tgb$interest_over_time |> group_by(geo) |> summarise(top = max(num(hits)))
+```
+
+Over its full history "tariff" is monthly from `r format(min(as.Date(tg_iot$date)), "%Y")` and peaks in `r format(as.Date(tg_iot$date[which.max(num(tg_iot$hits))]), "%B %Y")`. It peaks in the same month in Great Britain on its own. Pulled for the US, GB and Taiwan together, the US sets the 100, with GB at `r geo_max$top[geo_max$geo == "GB"]` and Taiwan at `r geo_max$top[geo_max$geo == "TW"]` at their highest. My copy of the script has no numbered sections, so I took "section 6" as the `names(tct)` step and "section 7" as running the first call twice.
+
+**What the website CSV did not give me.** `names(tct)` lists seven data frames. The timeline CSV I downloaded only had interest over time. It had nothing by country, region, DMA (US media market) or city, and no related topics or queries. The website offers some of these as separate downloads, but one R call returns them all. For this worldwide query the region and related topics frames came back empty, and the other five had data.
+
+## A note on terms
+
+```{r}
+h <- readRDS(file.path(dir, "r_harris_us_5y.rds"))$interest_over_time
+k <- readRDS(file.path(dir, "r_kamalaharris_us_5y.rds"))$interest_over_time
+hk <- bind_rows(mutate(h, hits = as.character(hits)), mutate(k, hits = as.character(hits))) |>
+  mutate(date = as.Date(date), hits = num(hits))
+h_peak <- h$date[which.max(num(h$hits))]
+k_peak <- k$date[which.max(num(k$hits))]
+```
+
+```{r}
+#| fig-height: 3.5
+ggplot(hk, aes(date, hits, color = keyword)) +
+  geom_line() +
+  labs(title = "Harris vs Kamala Harris, US web search, past 5 years",
+       subtitle = "Each term pulled on its own, so each is scaled to its own peak",
+       caption = "\"<1\" plotted as 0.5",
+       x = NULL, y = "Interest (0-100)", color = NULL) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+They are not the same. "Harris" peaks the week of `r day(h_peak)`, election week, while "Kamala Harris" peaks the week of `r day(k_peak)`, when Biden dropped out and she became the likely nominee. The two peaks are close in both series, so that order could flip in another sample. Relative to its own peak, "Harris" also stays higher the rest of the time (median `r median(num(h$hits))` vs `r median(num(k$hits))`), likely because it also picks up the county, the supermarket and everyone else named Harris. That gap is the difference between a term and a concept. "Harris" measures interest in Kamala Harris plus other things, so the wording decides what I end up measuring.
+
+## Comparing the two methods
+
+```{r}
+web_long <- web1 |> mutate(keyword = recode(keyword, Election = "election")) |> rename(web = hits)
+r_long <- r_match$interest_over_time |>
+  transmute(date = as.Date(date), keyword, r = as.character(hits))
+both <- inner_join(web_long, r_long, by = c("date", "keyword"))
+first_long <- r_first$interest_over_time |> transmute(date = as.Date(date), keyword, r = as.character(hits))
+script_match <- inner_join(web_long, first_long, by = c("date", "keyword"))
+
+t_first  <- max(r_log$pulled_utc[r_log$name == "trump_harris_election_us_5y" & r_log$ok])
+t_repeat <- r_log$pulled_utc[r_log$name == "trump_harris_election_us_5y_repeat2"]
+gap_min  <- round(as.numeric(difftime(t_repeat, t_first, units = "mins")))
+```
+
+```{r}
+#| fig-height: 3.5
+ggplot(both, aes(date)) +
+  geom_line(aes(y = num(web), color = "Website CSV")) +
+  geom_point(aes(y = num(r), color = "gtrendsR"), size = 0.6) +
+  facet_wrap(~ keyword, ncol = 3) +
+  labs(title = "Same query two ways: Trump, Kamala Harris, election",
+       subtitle = "gtrendsR points sit exactly on the website line",
+       caption = "\"<1\" plotted as 0.5",
+       x = NULL, y = "Interest (0-100)", color = NULL) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+**Are the numbers identical?** Yes. I ran the exact website query in R (Kamala Harris, not Harris), and all `r sum(both$web == both$r)` of `r nrow(both)` values match, with no gap in either direction. The script's own query with "Harris" also matches the website exactly for Trump (`r sum(script_match$keyword == "Trump" & script_match$web == script_match$r)` of `r sum(script_match$keyword == "Trump")`) and election (`r sum(script_match$keyword == "election" & script_match$web == script_match$r)` of `r sum(script_match$keyword == "election")`), because election's spike sets the 100 in both. Only the Harris column differs.
+
+**Reproducibility.** Neither method lets someone else regenerate my file exactly. "Past 5 years" is a moving window, so the same settings cover different weeks tomorrow, and Trends is built from a sample. The R code makes re-running easy, but only my cached files hold these exact numbers.
+
+**Provenance.** R records the query for me: every row carries the keyword, geography, window, search type and category. It does not record when it ran, and "today+5-y" does not say which five years, so I logged the pull times myself. The website CSV only notes the category and geography, so I had to write down everything else in the datasheet.
+
+**Scale.** Both allow five terms per query. Fifty terms means at least ten separate searches, each on its own 0-100 scale. In R that is a loop, but the rescaling problem stays, and fifty requests run into rate limits.
+
+**Fragility.** gtrendsR scrapes a service with no general public API. Of my first nine calls, `r sum(!r_log$ok)` failed and worked a few minutes later. I knew because R threw an error. If Google quietly changed its scaling, nothing would error. On the website, a wrong setting or a changed page layout only gets caught if every choice was recorded.
+
+**Same call twice.** Run again `r gap_min` minutes later, the first call returned the same numbers, `r sum(r_first$interest_over_time$hits == r_repeat$interest_over_time$hits)` of `r nrow(r_first$interest_over_time)` values, so Google appears to reuse the same sample over a short window. That does not prove the data is stable. Trends is a sample, and my test only covered a few minutes. Every finding from this source needs its exact query and pull time, and should come from a saved file, not a fresh call.

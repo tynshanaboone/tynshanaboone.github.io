@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Assignment 2: Google Trends Two Ways – Tynshana Boone</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-445b8638c3d06994fee0907d791121c4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Tynshana Boone</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-assignments" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Assignments</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-assignments">    
+        <li>
+    <a class="dropdown-item" href="./assign01.html">
+ <span class="dropdown-text">Assignment 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./assign02.html">
+ <span class="dropdown-text">Assignment 2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./assign03.html">
+ <span class="dropdown-text">Assignment 3</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#datasheet" id="toc-datasheet" class="nav-link active" data-scroll-target="#datasheet">Datasheet</a></li>
+  <li><a href="#the-website-data" id="toc-the-website-data" class="nav-link" data-scroll-target="#the-website-data">The website data</a></li>
+  <li><a href="#the-r-data" id="toc-the-r-data" class="nav-link" data-scroll-target="#the-r-data">The R data</a></li>
+  <li><a href="#a-note-on-terms" id="toc-a-note-on-terms" class="nav-link" data-scroll-target="#a-note-on-terms">A note on terms</a></li>
+  <li><a href="#comparing-the-two-methods" id="toc-comparing-the-two-methods" class="nav-link" data-scroll-target="#comparing-the-two-methods">Comparing the two methods</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Assignment 2: Google Trends Two Ways</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>dir <span class="ot">&lt;-</span> <span class="st">"data/gtrends"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>num <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">as.numeric</span>(<span class="fu">ifelse</span>(x <span class="sc">==</span> <span class="st">"&lt;1"</span>, <span class="st">"0.5"</span>, x))   <span class="co"># "&lt;1" treated as 0.5</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>day <span class="ot">&lt;-</span> <span class="cf">function</span>(d) <span class="fu">paste0</span>(<span class="fu">format</span>(<span class="fu">as.Date</span>(d), <span class="st">"%B "</span>), <span class="fu">as.integer</span>(<span class="fu">format</span>(<span class="fu">as.Date</span>(d), <span class="st">"%d"</span>)), <span class="fu">format</span>(<span class="fu">as.Date</span>(d), <span class="st">", %Y"</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>read_web <span class="ot">&lt;-</span> <span class="cf">function</span>(f, terms) {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">file.path</span>(dir, f), <span class="at">skip =</span> <span class="dv">2</span>, <span class="at">col_types =</span> <span class="fu">cols</span>(<span class="at">.default =</span> <span class="st">"c"</span>))</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(x) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"date"</span>, terms)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> <span class="fu">pivot_longer</span>(<span class="sc">-</span>date, <span class="at">names_to =</span> <span class="st">"keyword"</span>, <span class="at">values_to =</span> <span class="st">"hits"</span>) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(date))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>r_log <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_pull_log.csv"</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="datasheet" class="level2">
+<h2 class="anchored" data-anchor-id="datasheet">Datasheet</h2>
+<p>Every pull, recorded at the time it was made. Times are UTC.</p>
+<p><strong>Website pulls</strong></p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_csv</span>(<span class="fu">file.path</span>(dir, <span class="st">"pull_log.csv"</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"File"</span>, <span class="st">"Search terms"</span>, <span class="st">"Geography"</span>, <span class="st">"Time window"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Category"</span>, <span class="st">"Search type"</span>, <span class="st">"Pulled (UTC)"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 20%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 10%">
+<col style="width: 8%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Search terms</th>
+<th style="text-align: left;">Geography</th>
+<th style="text-align: left;">Time window</th>
+<th style="text-align: left;">Category</th>
+<th style="text-align: left;">Search type</th>
+<th style="text-align: left;">Pulled (UTC)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">web1_trump_kamalaharris_election_us_5y.csv</td>
+<td style="text-align: left;">Trump, Kamala Harris, Election</td>
+<td style="text-align: left;">United States</td>
+<td style="text-align: left;">Past 5 years</td>
+<td style="text-align: left;">All categories</td>
+<td style="text-align: left;">Web Search</td>
+<td style="text-align: left;">2026-09-29 14:08:51</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">web2_trump_kamalaharris_election_us_90d.csv</td>
+<td style="text-align: left;">Trump, Kamala Harris, Election</td>
+<td style="text-align: left;">United States</td>
+<td style="text-align: left;">Past 90 days</td>
+<td style="text-align: left;">All categories</td>
+<td style="text-align: left;">Web Search</td>
+<td style="text-align: left;">2026-09-29 14:09:58</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">web3_trump_kamalaharris_us_5y.csv</td>
+<td style="text-align: left;">Trump, Kamala Harris</td>
+<td style="text-align: left;">United States</td>
+<td style="text-align: left;">Past 5 years</td>
+<td style="text-align: left;">All categories</td>
+<td style="text-align: left;">Web Search</td>
+<td style="text-align: left;">2026-09-29 14:10:54</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">web4_usairanwar_us_5y.csv</td>
+<td style="text-align: left;">USA Iran war</td>
+<td style="text-align: left;">United States</td>
+<td style="text-align: left;">Past 5 years</td>
+<td style="text-align: left;">All categories</td>
+<td style="text-align: left;">Web Search</td>
+<td style="text-align: left;">2026-09-29 14:11:45</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><strong>R pulls</strong> (the ones used on this page)</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>used <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"trump_harris_election_us_5y"</span>, <span class="st">"trump_kamalaharris_election_us_5y"</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">"tariff_all"</span>, <span class="st">"tariff_gb_all"</span>, <span class="st">"tariff_us_gb_tw_all"</span>, <span class="st">"tct_all"</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">"harris_us_5y"</span>, <span class="st">"kamalaharris_us_5y"</span>, <span class="st">"trump_harris_election_us_5y_repeat2"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(used, <span class="cf">function</span>(n) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="fu">paste0</span>(<span class="st">"r_"</span>, n, <span class="st">".rds"</span>)))<span class="sc">$</span>interest_over_time</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="st">`</span><span class="at">Search terms</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste</span>(<span class="fu">unique</span>(x<span class="sc">$</span>keyword), <span class="at">collapse =</span> <span class="st">", "</span>),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">Geography =</span> <span class="fu">paste</span>(<span class="fu">unique</span>(x<span class="sc">$</span>geo), <span class="at">collapse =</span> <span class="st">", "</span>),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Time window</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">unique</span>(x<span class="sc">$</span>time), <span class="st">`</span><span class="at">Search type</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">unique</span>(x<span class="sc">$</span>gprop),</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">Category =</span> <span class="fu">unique</span>(x<span class="sc">$</span>category),</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Pulled (UTC)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">format</span>(<span class="fu">max</span>(r_log<span class="sc">$</span>pulled_utc[r_log<span class="sc">$</span>name <span class="sc">==</span> n <span class="sc">&amp;</span> r_log<span class="sc">$</span>ok]), <span class="st">"%Y-%m-%d %H:%M:%S"</span>))</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">|&gt;</span> <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 32%">
+<col style="width: 11%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 9%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Search terms</th>
+<th style="text-align: left;">Geography</th>
+<th style="text-align: left;">Time window</th>
+<th style="text-align: left;">Search type</th>
+<th style="text-align: right;">Category</th>
+<th style="text-align: left;">Pulled (UTC)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Trump, Harris, election</td>
+<td style="text-align: left;">US</td>
+<td style="text-align: left;">today+5-y</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:16:25</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Trump, Kamala Harris, election</td>
+<td style="text-align: left;">US</td>
+<td style="text-align: left;">today+5-y</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:17:26</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tariff</td>
+<td style="text-align: left;">world</td>
+<td style="text-align: left;">all</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:13:16</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tariff</td>
+<td style="text-align: left;">GB</td>
+<td style="text-align: left;">all</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:13:41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tariff</td>
+<td style="text-align: left;">US, GB, TW</td>
+<td style="text-align: left;">all</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:18:38</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tariff, China military, Taiwan</td>
+<td style="text-align: left;">world</td>
+<td style="text-align: left;">all</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:14:36</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Harris</td>
+<td style="text-align: left;">US</td>
+<td style="text-align: left;">today+5-y</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:14:57</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Kamala Harris</td>
+<td style="text-align: left;">US</td>
+<td style="text-align: left;">today+5-y</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:15:18</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Trump, Harris, election</td>
+<td style="text-align: left;">US</td>
+<td style="text-align: left;">today+5-y</td>
+<td style="text-align: left;">web</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">2026-09-29 14:20:10</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="the-website-data" class="level2">
+<h2 class="anchored" data-anchor-id="the-website-data">The website data</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>web1 <span class="ot">&lt;-</span> <span class="fu">read_web</span>(<span class="st">"web1_trump_kamalaharris_election_us_5y.csv"</span>, <span class="fu">c</span>(<span class="st">"Trump"</span>, <span class="st">"Kamala Harris"</span>, <span class="st">"Election"</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>web2 <span class="ot">&lt;-</span> <span class="fu">read_web</span>(<span class="st">"web2_trump_kamalaharris_election_us_90d.csv"</span>, <span class="fu">c</span>(<span class="st">"Trump"</span>, <span class="st">"Kamala Harris"</span>, <span class="st">"Election"</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>web3 <span class="ot">&lt;-</span> <span class="fu">read_web</span>(<span class="st">"web3_trump_kamalaharris_us_5y.csv"</span>, <span class="fu">c</span>(<span class="st">"Trump"</span>, <span class="st">"Kamala Harris"</span>))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>web4 <span class="ot">&lt;-</span> <span class="fu">read_web</span>(<span class="st">"web4_usairanwar_us_5y.csv"</span>, <span class="st">"USA Iran war"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>drop <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(web1, web3, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"date"</span>, <span class="st">"keyword"</span>), <span class="at">suffix =</span> <span class="fu">c</span>(<span class="st">"_with"</span>, <span class="st">"_without"</span>))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">filter</span>(drop, keyword <span class="sc">==</span> <span class="st">"Trump"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>kh <span class="ot">&lt;-</span> <span class="fu">filter</span>(drop, keyword <span class="sc">==</span> <span class="st">"Kamala Harris"</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>iran <span class="ot">&lt;-</span> <span class="fu">arrange</span>(web4, <span class="fu">desc</span>(<span class="fu">num</span>(hits)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><strong>Dates and interval.</strong> The five-year file runs weekly from September 26, 2021 to September 27, 2026 (262 weeks). The 90-day file runs daily from June 29, 2026 to September 29, 2026 (93 days), so the interval changes with the window. In both, the last week or day was still in progress when I pulled it.</p>
+<p><strong>Units.</strong> These are not search counts. Each point is a share of all searches in that place and time, rescaled so the highest point in the query is 100. A 0 means the volume was too low to show, and “&lt;1” means some interest but under 1 (<a href="https://support.google.com/trends/answer/4365533">Google</a>).</p>
+<p><strong>Removing a term.</strong> With Election dropped, the other two terms changed. Trump’s top value went from 26 to 100, and none of its 262 weeks kept the same number. Kamala Harris’s top value went from 7 to 26, and only 228 of 262 weeks stayed the same, mostly the “&lt;1” weeks. Election’s spike had set the 100, so without it everything was rescaled. The numbers only compare within one query.</p>
+<p><strong>My own term.</strong> “USA Iran war” peaks the week of March 1, 2026. Outside March 2026, its biggest spike is 51 the week of June 22, 2025, around the US strikes on Iranian nuclear sites. It is 0 in 121 of 262 weeks, 102 of them before 2025, and has been above zero every week since January 2026. It only counts searches with all three words, so it misses people who typed “Iran war”.</p>
+</section>
+<section id="the-r-data" class="level2">
+<h2 class="anchored" data-anchor-id="the-r-data">The R data</h2>
+<p>I ran the calls until each one succeeded, cached the results, and this page works from the saved files. Every attempt is in <a href="data/gtrends/r_pull_log.csv">r_pull_log.csv</a>, and the full script is <a href="data/gtrends/pull_gtrends.R">pull_gtrends.R</a>. The code below is the assignment’s first call and the rest of gtrendsR01.R, adapted to save each result.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gtrendsR)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>TrumpHarrisElection <span class="ot">&lt;-</span> <span class="fu">gtrends</span>(<span class="fu">c</span>(<span class="st">"Trump"</span>, <span class="st">"Harris"</span>, <span class="st">"election"</span>),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">onlyInterest =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                               <span class="at">geo          =</span> <span class="st">"US"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">gprop        =</span> <span class="st">"web"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                               <span class="at">time         =</span> <span class="st">"today+5-y"</span>,   <span class="co"># last five years</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                               <span class="at">category     =</span> <span class="dv">0</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>the_df <span class="ot">&lt;-</span> TrumpHarrisElection<span class="sc">$</span>interest_over_time</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(TrumpHarrisElection)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Cache the raw pull - the next call will not return the same numbers</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(the_df, <span class="fu">paste0</span>(<span class="st">"gtrends_us_5y_"</span>, <span class="fu">Sys.Date</span>(), <span class="st">".csv"</span>))</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Rest of gtrendsR01.R (adapted)</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>tg <span class="ot">&lt;-</span> <span class="fu">gtrends</span>(<span class="st">"tariff"</span>, <span class="at">time =</span> <span class="st">"all"</span>)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="fu">gtrends</span>(<span class="st">"tariff"</span>, <span class="at">geo =</span> <span class="st">"GB"</span>, <span class="at">time =</span> <span class="st">"all"</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="fu">gtrends</span>(<span class="st">"tariff"</span>, <span class="at">geo =</span> <span class="fu">c</span>(<span class="st">"US"</span>, <span class="st">"GB"</span>, <span class="st">"TW"</span>), <span class="at">time =</span> <span class="st">"all"</span>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>tct <span class="ot">&lt;-</span> <span class="fu">gtrends</span>(<span class="fu">c</span>(<span class="st">"tariff"</span>, <span class="st">"China military"</span>, <span class="st">"Taiwan"</span>), <span class="at">time =</span> <span class="st">"all"</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tct)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>r_first  <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_trump_harris_election_us_5y.rds"</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>r_repeat <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_trump_harris_election_us_5y_repeat2.rds"</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>r_match  <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_trump_kamalaharris_election_us_5y.rds"</span>))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>tg       <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_tariff_all.rds"</span>))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>tgb      <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_tariff_us_gb_tw_all.rds"</span>))</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>tct      <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_tct_all.rds"</span>))</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tct)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "interest_over_time"  "interest_by_country" "interest_by_region" 
+[4] "interest_by_dma"     "interest_by_city"    "related_topics"     
+[7] "related_queries"    </code></pre>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tg_iot <span class="ot">&lt;-</span> tg<span class="sc">$</span>interest_over_time</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>geo_max <span class="ot">&lt;-</span> tgb<span class="sc">$</span>interest_over_time <span class="sc">|&gt;</span> <span class="fu">group_by</span>(geo) <span class="sc">|&gt;</span> <span class="fu">summarise</span>(<span class="at">top =</span> <span class="fu">max</span>(<span class="fu">num</span>(hits)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Over its full history “tariff” is monthly from 2004 and peaks in April 2025. It peaks in the same month in Great Britain on its own. Pulled for the US, GB and Taiwan together, the US sets the 100, with GB at 58 and Taiwan at 36 at their highest. My copy of the script has no numbered sections, so I took “section 6” as the <code>names(tct)</code> step and “section 7” as running the first call twice.</p>
+<p><strong>What the website CSV did not give me.</strong> <code>names(tct)</code> lists seven data frames. The timeline CSV I downloaded only had interest over time. It had nothing by country, region, DMA (US media market) or city, and no related topics or queries. The website offers some of these as separate downloads, but one R call returns them all. For this worldwide query the region and related topics frames came back empty, and the other five had data.</p>
+</section>
+<section id="a-note-on-terms" class="level2">
+<h2 class="anchored" data-anchor-id="a-note-on-terms">A note on terms</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_harris_us_5y.rds"</span>))<span class="sc">$</span>interest_over_time</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(dir, <span class="st">"r_kamalaharris_us_5y.rds"</span>))<span class="sc">$</span>interest_over_time</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>hk <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">mutate</span>(h, <span class="at">hits =</span> <span class="fu">as.character</span>(hits)), <span class="fu">mutate</span>(k, <span class="at">hits =</span> <span class="fu">as.character</span>(hits))) <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(date), <span class="at">hits =</span> <span class="fu">num</span>(hits))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>h_peak <span class="ot">&lt;-</span> h<span class="sc">$</span>date[<span class="fu">which.max</span>(<span class="fu">num</span>(h<span class="sc">$</span>hits))]</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>k_peak <span class="ot">&lt;-</span> k<span class="sc">$</span>date[<span class="fu">which.max</span>(<span class="fu">num</span>(k<span class="sc">$</span>hits))]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(hk, <span class="fu">aes</span>(date, hits, <span class="at">color =</span> keyword)) <span class="sc">+</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Harris vs Kamala Harris, US web search, past 5 years"</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Each term pulled on its own, so each is scaled to its own peak"</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"</span><span class="sc">\"</span><span class="st">&lt;1</span><span class="sc">\"</span><span class="st"> plotted as 0.5"</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Interest (0-100)"</span>, <span class="at">color =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign02_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>They are not the same. “Harris” peaks the week of November 3, 2024, election week, while “Kamala Harris” peaks the week of July 21, 2024, when Biden dropped out and she became the likely nominee. The two peaks are close in both series, so that order could flip in another sample. Relative to its own peak, “Harris” also stays higher the rest of the time (median 7 vs 1), likely because it also picks up the county, the supermarket and everyone else named Harris. That gap is the difference between a term and a concept. “Harris” measures interest in Kamala Harris plus other things, so the wording decides what I end up measuring.</p>
+</section>
+<section id="comparing-the-two-methods" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-the-two-methods">Comparing the two methods</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>web_long <span class="ot">&lt;-</span> web1 <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">keyword =</span> <span class="fu">recode</span>(keyword, <span class="at">Election =</span> <span class="st">"election"</span>)) <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">web =</span> hits)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>r_long <span class="ot">&lt;-</span> r_match<span class="sc">$</span>interest_over_time <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(date), keyword, <span class="at">r =</span> <span class="fu">as.character</span>(hits))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>both <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(web_long, r_long, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"date"</span>, <span class="st">"keyword"</span>))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>first_long <span class="ot">&lt;-</span> r_first<span class="sc">$</span>interest_over_time <span class="sc">|&gt;</span> <span class="fu">transmute</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(date), keyword, <span class="at">r =</span> <span class="fu">as.character</span>(hits))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>script_match <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(web_long, first_long, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"date"</span>, <span class="st">"keyword"</span>))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>t_first  <span class="ot">&lt;-</span> <span class="fu">max</span>(r_log<span class="sc">$</span>pulled_utc[r_log<span class="sc">$</span>name <span class="sc">==</span> <span class="st">"trump_harris_election_us_5y"</span> <span class="sc">&amp;</span> r_log<span class="sc">$</span>ok])</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>t_repeat <span class="ot">&lt;-</span> r_log<span class="sc">$</span>pulled_utc[r_log<span class="sc">$</span>name <span class="sc">==</span> <span class="st">"trump_harris_election_us_5y_repeat2"</span>]</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>gap_min  <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">as.numeric</span>(<span class="fu">difftime</span>(t_repeat, t_first, <span class="at">units =</span> <span class="st">"mins"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(both, <span class="fu">aes</span>(date)) <span class="sc">+</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">num</span>(web), <span class="at">color =</span> <span class="st">"Website CSV"</span>)) <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">num</span>(r), <span class="at">color =</span> <span class="st">"gtrendsR"</span>), <span class="at">size =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> keyword, <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Same query two ways: Trump, Kamala Harris, election"</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"gtrendsR points sit exactly on the website line"</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"</span><span class="sc">\"</span><span class="st">&lt;1</span><span class="sc">\"</span><span class="st"> plotted as 0.5"</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Interest (0-100)"</span>, <span class="at">color =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign02_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Are the numbers identical?</strong> Yes. I ran the exact website query in R (Kamala Harris, not Harris), and all 786 of 786 values match, with no gap in either direction. The script’s own query with “Harris” also matches the website exactly for Trump (262 of 262) and election (262 of 262), because election’s spike sets the 100 in both. Only the Harris column differs.</p>
+<p><strong>Reproducibility.</strong> Neither method lets someone else regenerate my file exactly. “Past 5 years” is a moving window, so the same settings cover different weeks tomorrow, and Trends is built from a sample. The R code makes re-running easy, but only my cached files hold these exact numbers.</p>
+<p><strong>Provenance.</strong> R records the query for me: every row carries the keyword, geography, window, search type and category. It does not record when it ran, and “today+5-y” does not say which five years, so I logged the pull times myself. The website CSV only notes the category and geography, so I had to write down everything else in the datasheet.</p>
+<p><strong>Scale.</strong> Both allow five terms per query. Fifty terms means at least ten separate searches, each on its own 0-100 scale. In R that is a loop, but the rescaling problem stays, and fifty requests run into rate limits.</p>
+<p><strong>Fragility.</strong> gtrendsR scrapes a service with no general public API. Of my first nine calls, 3 failed and worked a few minutes later. I knew because R threw an error. If Google quietly changed its scaling, nothing would error. On the website, a wrong setting or a changed page layout only gets caught if every choice was recorded.</p>
+<p><strong>Same call twice.</strong> Run again 4 minutes later, the first call returned the same numbers, 786 of 786 values, so Google appears to reuse the same sample over a short window. That does not prove the data is stable. Trends is a sample, and my test only covered a few minutes. Every finding from this source needs its exact query and pull time, and should come from a saved file, not a fresh call.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
