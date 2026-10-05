@@ -1,0 +1,373 @@
+---
+title: "Assignment 4: Webscraping 1"
+execute:
+  message: false
+  warning: false
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
+---
+
+This page scrapes a practice site and two Wikipedia tables with rvest, cleans the foreign-exchange reserves table, and compares it with the same numbers from the World Bank API. It ends with a one-page plan for collecting web data for my own research. Answers are labeled with the question numbers from the assignment.
+
+```{r}
+library(rvest)
+library(dplyr)
+library(stringr)
+library(readr)
+library(purrr)
+library(ggplot2)
+library(knitr)
+
+options(HTTPUserAgent = "EPPS 6302 class assignment (UT Dallas)")
+
+# save each page once, then read the saved copy
+dir <- "data/webscrape"
+dir.create(dir, showWarnings = FALSE, recursive = TRUE)
+
+fetch <- function(url, file) {
+  path <- file.path(dir, file)
+  if (!file.exists(path)) {
+    stopifnot(robotstxt::paths_allowed(url))   # check robots.txt first
+    download.file(url, path, quiet = TRUE)
+    Sys.sleep(2)                               # pause between requests
+  }
+  read_html(path)
+}
+
+books_urls <- paste0("https://books.toscrape.com/catalogue/page-", 1:5, ".html")
+wiki_url   <- "https://en.wikipedia.org/wiki/List_of_countries_by_foreign-exchange_reserves"
+coffee_url <- "https://en.wikipedia.org/wiki/List_of_countries_by_coffee_production"
+```
+
+## 0. Permission
+
+I checked each path with `robotstxt::paths_allowed()` before the first request. `fetch()` also runs this check before every download.
+
+```{r}
+#| code-fold: false
+allowed <- tibble(
+  url = c(books_urls[1], wiki_url, coffee_url),
+  allowed = map_lgl(url, \(u) suppressWarnings(robotstxt::paths_allowed(u)))
+)
+kable(allowed)
+```
+
+All three are allowed. Wikipedia's robots.txt blocks some crawlers and internal pages, but not articles. books.toscrape.com has no robots.txt (it returns 404), so nothing is restricted, and the site was built for scraping practice.
+
+## 1. Warm up on books.toscrape.com
+
+### 1a. First page
+
+This is the first block of `rvest_wiki01.R`: title, price and rating for the 20 books on page 1. The only change is that the page is read through `fetch()`.
+
+```{r}
+books_pg <- fetch(books_urls[1], "books_page-1.html")
+
+books <- tibble(
+  title  = books_pg |> html_elements("article.product_pod h3 a") |> html_attr("title"),
+  price  = books_pg |> html_elements("article.product_pod p.price_color") |> html_text2(),
+  rating = books_pg |> html_elements("article.product_pod p.star-rating") |>
+             html_attr("class") |> str_remove("star-rating ")
+) |>
+  mutate(price_gbp = parse_number(price))
+
+kable(head(books))
+```
+
+### 1b. Five pages in one dataframe
+
+The same selectors in a function, run on pages 1 to 5 and bound into one dataframe. Ratings are changed from words to numbers.
+
+```{r}
+scrape_books <- function(i) {
+  pg <- fetch(books_urls[i], paste0("books_page-", i, ".html"))
+  tibble(
+    page   = i,
+    title  = pg |> html_elements("article.product_pod h3 a") |> html_attr("title"),
+    price  = pg |> html_elements("article.product_pod p.price_color") |> html_text2() |> parse_number(),
+    rating = pg |> html_elements("article.product_pod p.star-rating") |>
+               html_attr("class") |> str_remove("star-rating ")
+  )
+}
+
+books5 <- map(1:5, scrape_books) |>
+  list_rbind() |>
+  mutate(rating = match(rating, c("One", "Two", "Three", "Four", "Five")))
+
+books5 |> count(page, name = "books") |> kable()
+```
+
+That gives `r nrow(books5)` books across 5 pages, with prices from £`r min(books5$price)` to £`r max(books5$price)` and a mean rating of `r round(mean(books5$rating), 2)` stars.
+
+```{r}
+kable(head(books5, 10))
+```
+
+## 2. The Wikipedia table
+
+### 2a. Foreign-exchange reserves
+
+The page has `r length(html_elements(fetch(wiki_url, "wiki_fx_reserves.html"), "table.wikitable"))` tables with the `wikitable` class: the reserves list (about 200 rows) and a quarterly currency breakdown. In the reserves table, the first two rows are not countries. The header takes up three rows, and `html_table()` only uses the first as column names.
+
+```{r}
+wiki_pg <- fetch(wiki_url, "wiki_fx_reserves.html")
+tabs <- wiki_pg |> html_elements("table.wikitable")
+
+# look at every table before picking one
+tabs |> html_table() |> map(dim) |> map_dfr(\(d) tibble(rows = d[1], columns = d[2])) |>
+  mutate(table = row_number(), .before = 1) |> kable()
+
+reserves_raw <- tabs[[1]] |> html_table()
+kable(head(reserves_raw, 4))
+```
+
+### 2b. A different table: coffee production
+
+I pointed the program at the [list of countries by coffee production](`r coffee_url`), since coffee is my research topic. Here is the clean-up step from `rvest_wiki01.R`, unchanged, run on both pages:
+
+```{r}
+#| error: true
+#| code-fold: false
+script_clean <- function(raw) {
+  raw |>
+    janitor::clean_names() |>
+    mutate(across(where(is.character),
+                  ~ .x |> str_remove_all("\\[.*?\\]") |> str_squish())) |>
+    filter(!str_detect(country_or_region, regex("total|world", ignore_case = TRUE)))
+}
+
+coffee_raw <- fetch(coffee_url, "wiki_coffee_production.html") |>
+  html_elements("table.wikitable") |> pluck(1) |> html_table()
+
+script_clean(reserves_raw)
+script_clean(coffee_raw)
+```
+
+What broke:
+
+- **The column name.** The filter uses `country_or_region`. The reserves table now calls that column "Country (as recognized by the UN)" and the coffee table calls it "Country", so the code fails on both pages. Any header edit on Wikipedia breaks the script.
+- **The table layout.** My reserves cleaning in 2c names eight columns. The coffee table has two (country and tonnes), so that code fails on it too. Each table needs its own cleaning.
+- **The World row.** The coffee table starts with a World total, so the Total/World filter matters here. On the reserves page it removes nothing.
+- **What did not break:** `tabs[[1]]` was the right table on both pages. That was luck, since the code takes the first table without checking.
+
+The coffee table cleaned for its own layout (FAO production for 2023, per the table caption):
+
+```{r}
+coffee <- coffee_raw |>
+  rename(country = 1, tonnes = 2) |>
+  mutate(country = str_remove_all(country, "\\[.*?\\]|[*α]") |> str_squish(),
+         tonnes  = parse_number(tonnes)) |>
+  filter(!str_detect(country, regex("^(total|world)$", ignore_case = TRUE)))
+
+coffee |> slice_head(n = 10) |> kable(format.args = list(big.mark = ","))
+```
+
+That leaves `r nrow(coffee)` producing countries after the World row is removed.
+
+### 2c. Cleaning the reserves table
+
+```{r}
+#| code-fold: false
+clean_text <- function(x) {
+  x |>
+    str_replace_all("[\u2009\u202f\u00a0]", " ") |>   # thin and non-breaking spaces
+    str_remove_all("\\[.*?\\]") |>                 # footnote markers like [1] or [note 2]
+    str_remove_all("\\*") |>                       # the * the page adds after some names
+    str_squish()
+}
+
+reserves <- reserves_raw |>
+  # (ii) header spans three rows: set names, drop the two extra rows
+  set_names(c("country", "continent", "incl_gold_musd", "incl_gold_change",
+              "excl_gold_musd", "excl_gold_change", "last_reported", "ref")) |>
+  filter(!country %in% names(reserves_raw)) |>
+  mutate(across(everything(), clean_text)) |>
+  # (ii) any Total or World row
+  filter(!str_detect(country, regex("total|world", ignore_case = TRUE))) |>
+  # (ii) drop the ref and change columns
+  select(-ref, -incl_gold_change, -excl_gold_change) |>
+  mutate(across(ends_with("_musd"), parse_number),
+         # (i) dates come in several formats: "1 Mar 2024", "11 Sept 2026", "12 JUN 2026"
+         date_text = last_reported,
+         last_reported = lubridate::dmy(str_replace(last_reported, "\\bSept\\b", "Sep"), quiet = TRUE))
+```
+
+```{r}
+check <- tibble(
+  step = c("Rows from html_table()", "Header rows dropped", "Total or World rows dropped",
+           "Country rows left", "Footnote markers [n] found in cells",
+           "Thin or non-breaking spaces found in cells", "Dates that did not parse"),
+  n = c(nrow(reserves_raw),
+        sum(reserves_raw[[1]] %in% names(reserves_raw)),
+        sum(str_detect(clean_text(reserves_raw[[1]]), regex("total|world", ignore_case = TRUE))),
+        nrow(reserves),
+        sum(str_detect(unlist(reserves_raw[, 1:7]), "\\[.*?\\]")),
+        sum(str_detect(unlist(reserves_raw[, 1:7]), "[\u2009\u202f\u00a0]")),
+        sum(is.na(reserves$last_reported)))
+)
+kable(check)
+```
+
+This version of the page has no footnote markers or thin spaces in the cells, and no Total or World row. Footnotes now sit in their own Ref. column, which I dropped. I kept the filters anyway, since a later edit could bring these back.
+
+```{r}
+bad_dates <- reserves |> filter(is.na(last_reported)) |> select(country, date_text)
+kable(bad_dates)
+```
+
+The date that would not parse is "`r bad_dates$date_text[1]`" for `r bad_dates$country[1]`, which is not a real date since April has 30 days. I left it missing rather than guess what the editor meant.
+
+```{r}
+reserves |>
+  count(year = lubridate::year(last_reported), name = "countries") |>
+  kable()
+```
+
+The "excluding gold" column is blank for `r sum(is.na(reserves$excl_gold_musd))` of the `r nrow(reserves)` countries, because Wikipedia shows "N/a" there. So I use "including gold", which is filled in for every country and is also what the World Bank reports.
+
+The "last reported" dates run from `r format(min(reserves$last_reported, na.rm = TRUE), "%B %Y")` to `r format(max(reserves$last_reported, na.rm = TRUE), "%B %Y")`, so the table compares countries at different points in time.
+
+```{r}
+reserves |> select(-date_text) |> slice_head(n = 10) |>
+  kable(format.args = list(big.mark = ","))
+
+write_csv(reserves, file.path(dir, "reserves_wiki_clean.csv"))
+```
+
+## 3. The same quantity from the World Bank
+
+### 3a. One call
+
+```{r}
+#| code-fold: false
+wdi_file <- file.path(dir, "wdi_FI.RES.TOTL.CD.rds")
+if (!file.exists(wdi_file)) {
+  reserves_api <- WDI::WDI(indicator = "FI.RES.TOTL.CD", start = 2015, end = 2025, extra = TRUE)
+  saveRDS(reserves_api, wdi_file)
+}
+reserves_api <- readRDS(wdi_file)
+```
+
+```{r}
+# countries only, latest year with data
+wb <- reserves_api |>
+  filter(region != "Aggregates", !is.na(FI.RES.TOTL.CD)) |>
+  group_by(iso3c) |>
+  slice_max(year, n = 1) |>
+  ungroup() |>
+  transmute(iso3c, wb_country = country, wb_year = year,
+            wb_musd = FI.RES.TOTL.CD / 1e6, lastupdated)
+
+wb |> count(wb_year, name = "countries") |> kable()
+```
+
+The World Bank series was last updated on `r unique(reserves_api$lastupdated)`. Its latest year is `r max(wb$wb_year)`, and each value is the amount held at the end of that year.
+
+### 3b. Comparing the two
+
+Country names differ between the two sources ("Russia" and "Russian Federation", "South Korea" and "Korea, Rep."), so I matched them by country code, using the World Bank's country list and a short list of names it spells differently.
+
+```{r}
+wb_names <- reserves_api |> distinct(country, iso3c) |> filter(iso3c != "")
+fix <- c("Russia" = "RUS", "South Korea" = "KOR", "Turkey" = "TUR", "Iran" = "IRN",
+         "Egypt" = "EGY", "Venezuela" = "VEN", "Vietnam" = "VNM", "Syria" = "SYR",
+         "Laos" = "LAO", "Slovakia" = "SVK", "Kyrgyzstan" = "KGZ", "Yemen" = "YEM",
+         "Gambia" = "GMB", "The Gambia" = "GMB", "Bahamas" = "BHS", "The Bahamas" = "BHS",
+         "Hong Kong" = "HKG", "Macau" = "MAC", "Macao" = "MAC", "Brunei" = "BRN",
+         "Czech Republic" = "CZE", "Czechia" = "CZE", "Ivory Coast" = "CIV",
+         "Cape Verde" = "CPV", "Republic of the Congo" = "COG",
+         "Democratic Republic of the Congo" = "COD", "DR Congo" = "COD",
+         "North Korea" = "PRK", "Micronesia" = "FSM", "Federated States of Micronesia" = "FSM", "Saint Lucia" = "LCA",
+         "Saint Kitts and Nevis" = "KNA", "Saint Vincent and the Grenadines" = "VCT",
+         "Palestine" = "PSE", "State of Palestine" = "PSE", "Kosovo" = "XKX",
+         "Curaçao" = "CUW", "East Timor" = "TLS", "Timor-Leste" = "TLS",
+         "São Tomé and Príncipe" = "STP", "Sao Tome and Principe" = "STP",
+         "Eswatini" = "SWZ", "Turkmenistan" = "TKM", "Somalia" = "SOM")
+
+compare <- reserves |>
+  mutate(iso3c = coalesce(unname(fix[country]), wb_names$iso3c[match(country, wb_names$country)])) |>
+  full_join(wb, by = "iso3c") |>
+  mutate(diff_pct = 100 * (incl_gold_musd - wb_musd) / wb_musd)
+
+only_wiki <- compare |> filter(is.na(wb_musd), !is.na(incl_gold_musd))
+only_wb   <- compare |> filter(is.na(incl_gold_musd), !is.na(wb_musd))
+both      <- compare |> filter(!is.na(incl_gold_musd), !is.na(wb_musd))
+```
+
+`r nrow(both)` countries are in both sources. `r nrow(only_wiki)` are only on Wikipedia and `r nrow(only_wb)` is only in the World Bank data. For the World Bank I used each country's latest year with data.
+
+```{r}
+#| fig-height: 5
+ggplot(both, aes(wb_musd / 1e3, incl_gold_musd / 1e3)) +
+  geom_abline(linetype = "dashed", colour = "grey50") +
+  geom_point(alpha = 0.6) +
+  scale_x_log10(labels = scales::comma) +
+  scale_y_log10(labels = scales::comma) +
+  labs(x = "World Bank, latest year (US$ billion, log scale)",
+       y = "Wikipedia, including gold (US$ billion, log scale)",
+       title = "Reserves: Wikipedia vs World Bank",
+       subtitle = "Dashed line = same value in both") +
+  theme_minimal()
+```
+
+```{r}
+agree <- both |> summarise(within5 = mean(abs(diff_pct) <= 5), within20 = mean(abs(diff_pct) <= 20))
+```
+
+Only `r round(100 * agree$within5)`% of the matched countries are within 5% of each other, and `r round(100 * agree$within20)`% are within 20%. The largest gaps:
+
+```{r}
+both |>
+  arrange(desc(abs(diff_pct))) |>
+  slice_head(n = 12) |>
+  transmute(country, wikipedia_musd = incl_gold_musd, wiki_date = date_text,
+            world_bank_musd = round(wb_musd), wb_year = as.character(wb_year),
+            diff_pct = round(diff_pct, 1)) |>
+  kable(format.args = list(big.mark = ","))
+```
+
+The ten largest holders:
+
+```{r}
+both |>
+  slice_max(incl_gold_musd, n = 10) |>
+  transmute(country, wikipedia_musd = incl_gold_musd, wiki_date = date_text,
+            world_bank_musd = round(wb_musd), wb_year = as.character(wb_year), diff_pct = round(diff_pct, 1)) |>
+  kable(format.args = list(big.mark = ","))
+```
+
+Only on Wikipedia:
+
+```{r}
+only_wiki |> select(country, incl_gold_musd, date_text) |> kable(format.args = list(big.mark = ","))
+```
+
+**Which differ, and why.** The largest holders mostly agree (China, South Korea, Singapore, Brazil and Saudi Arabia are within 4%), but many smaller countries do not. The gaps have five causes:
+
+1. **Different dates.** `r sum(format(reserves$last_reported, "%Y-%m") == "2024-03", na.rm = TRUE)` of the `r nrow(reserves)` Wikipedia rows have not been updated since March 2024, while the World Bank value is mostly for the end of `r max(wb$wb_year)`. For Bolivia, Gabon and South Sudan, the Wikipedia numbers are close to their World Bank values for 2023, but their reserves fell sharply after that. Some World Bank series also stop early (Hong Kong after 2023, Afghanistan after 2020).
+2. **Gold valuation.** The United States is `r abs(round(both$diff_pct[both$country == "United States"]))`% lower on Wikipedia. Its "including gold" figure is only about US$11 billion above "excluding gold", which is US gold valued at the old official price of $42.22 an ounce. The World Bank uses the market price, which adds over US$1 trillion.
+3. **Coverage.** The World Bank does not report Taiwan separately. Benin, Burkina Faso, Ivory Coast, Guinea-Bissau, Mali, Niger, Senegal and Togo share one central bank (the BCEAO), which holds their reserves together, so there is no World Bank figure for each country. Iran, North Korea, Cuba, Syria, Turkmenistan, Somalia, Andorra, Curaçao and Kiribati have no World Bank value for these years, and Vatican City and Montserrat are not in the World Bank's country list.
+4. **Units.** Mozambique and North Macedonia show 4 (US$ million) on Wikipedia but several billion at the World Bank. That looks like a number in billions entered in the millions column.
+5. **No checks.** Nothing on Wikipedia checks the entries. "31 Apr 2024" and the unit errors are the mistakes visible here, and there is no way to tell how many others there are.
+
+**Which vintage.** The World Bank numbers are end-of-year values, mostly for `r max(wb$wb_year)`, from the release updated on `r unique(reserves_api$lastupdated)`. The Wikipedia numbers are from the page as I downloaded it on `r format(file.mtime(file.path(dir, "wiki_fx_reserves.html")), "%B %e, %Y") |> str_squish()`, with reporting dates from `r format(min(reserves$last_reported, na.rm = TRUE), "%B %Y")` to `r format(max(reserves$last_reported, na.rm = TRUE), "%B %Y")`. Scraping the page again next month could give different numbers, with no record of what changed.
+
+### 3c. When is scraping the right tool?
+
+Scraping is the right tool when the data is only published on a web page, with no API or download, and the site's robots.txt and terms of service allow it. When the same numbers are available from an API or an official file, as the reserves are from the World Bank, use that instead, because it is documented, versioned and gives everyone the same answer.
+
+## 4. Data plan
+
+My research looks at how the timing of my coffee intake relates to my daily focus, using my own coffee log and a writing-time tracker. Web data gives an outside comparison: when people in the US search for coffee, by hour and day of the week. This shows whether my pattern matches the general one.
+
+**a. Source.** Google Trends search interest for "coffee" in the US: hourly values for each 7-day window and daily values for the same three months as my logs. I chose it because it is the only free public source I found that shows coffee-related behavior by hour. The ICO and USDA publish coffee consumption only as yearly national totals, which cannot show a daily pattern. Coffee shop sales data would be closer to actual drinking, but it is not public.
+
+**b. robots.txt and Terms of Service.** The robots.txt for trends.google.com blocks `/explore?` and `/trends/api`, which are the pages a scraper would request, including the gtrendsR package I used in Assignment 2. Google's Terms of Service do not allow automated access that goes against robots.txt. So scraping Google Trends is not allowed, and I will not do it.
+
+**c. API.** Google opened an official Trends API in July 2025, but only for approved applicants, and it gives daily, weekly, monthly or yearly data, not hourly. I will apply and use it for the daily series if I am approved. For the hourly data, and until then, I will use the "Download CSV" button on the Trends website. That is a person using the site, not a bot, so it follows robots.txt and the terms. Since I am not scraping, no justification is needed.
+
+**d. Volume, rate limiting and caching.** About 13 hourly downloads (168 rows each) and one daily series over the three months, about 2,300 rows in total. Downloads are by hand, once a week, the same load as normal use. Google Trends returns a slightly different sample each time (Assignment 2 showed this), so I will save every file unchanged with the date in its name and log each download (search term, time window, download time). The analysis will only read the saved files.
+
+**e. What breaks, and how I will notice.** Google can change the CSV layout (header lines or column names), how small values are shown (currently "<1"), or how the sample is drawn. A script will check each new file before I use it: the expected column names, 168 rows for a 7-day hourly file, values between 0 and 100 with a top value of 100, and dates that match the window I asked for. If a check fails, the script stops and names the file.
