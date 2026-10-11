@@ -6,3 +6,6 @@
 
 **/*.quarto_ipynb
 .Renviron
+
+# GovInfo hearing PDFs (assignment 5), not published
+data/govinfo/pdf/

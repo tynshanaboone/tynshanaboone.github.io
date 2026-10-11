@@ -1,0 +1,428 @@
+---
+title: "Assignment 5: Government data API"
+execute:
+  message: false
+  warning: false
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
+---
+
+This page finds the ten most recent hearings of the Senate Committee on Foreign Relations on GovInfo, through the search page and through the API, downloads the PDFs both ways, and looks at how usable they are as data. Answers are labeled with the question numbers from the assignment.
+
+```{r}
+library(httr2)
+library(dplyr)
+library(purrr)
+library(readr)
+library(stringr)
+library(tidyr)
+library(knitr)
+
+dir     <- "data/govinfo"
+pdf_dir <- file.path(dir, "pdf")   # listed in .gitignore
+dir.create(pdf_dir, showWarnings = FALSE, recursive = TRUE)
+
+# every API call goes through this; the key comes from .Renviron and goes in a header
+govinfo <- function(path) {
+  request("https://api.govinfo.gov") |>
+    req_url_path_append(path) |>
+    req_headers(`X-Api-Key` = Sys.getenv("GOVINFO_API_KEY"), .redact = "X-Api-Key") |>
+    req_retry(max_tries = 3)
+}
+
+# save each API response once, then read the saved copy
+cached <- function(file, f) {
+  path <- file.path(dir, file)
+  if (!file.exists(path)) saveRDS(f(), path)
+  readRDS(path)
+}
+
+committee_query <- "collection:(CHRG) AND committee:(Foreign Relations) AND chamber:(senate)"
+phrase_query    <- 'collection:(CHRG) AND "Committee on Foreign Relations"'
+```
+
+## 0. API key
+
+The key is in `~/.Renviron` as `GOVINFO_API_KEY` and read with `Sys.getenv()`, so it is not on this page or in the repository. I send it in the `X-Api-Key` header instead of the URL, so it does not show up in the download log or in error messages.
+
+```{r}
+#| code-fold: false
+collections <- cached("api_collections.rds", \(x) {
+  govinfo("collections") |> req_perform() |> resp_body_json()
+})
+length(collections$collections)
+```
+
+The key works: `/collections` returns `r length(collections$collections)` collections.
+
+## 1. Search by hand
+
+**1a.** On the [GovInfo search page](https://www.govinfo.gov/app/search/) I first tried the query from the assignment, `r phrase_query`. The committee filter showed it also returns House Foreign Affairs, Senate Appropriations, Senate Armed Services and other committees. So I searched the committee and chamber fields instead, sorted by "Date New to Old":
+
+```
+collection:(CHRG) AND committee:(Foreign Relations) AND chamber:(senate)
+```
+
+**1b.** The page builds the search into the URL as JSON:
+
+```
+https://www.govinfo.gov/app/search/{"query":"collection:(CHRG) AND committee:(Foreign Relations) AND chamber:(senate)","offset":0,"sortBy":"2"}
+```
+
+```{r}
+export_csv  <- list.files(dir, "^govinfo-search-results-.*\\.csv$", full.names = TRUE)
+export_json <- list.files(dir, "^govinfo-search-results-.*\\.json$", full.names = TRUE)
+# the export file name has the download time in UTC
+export_time <- str_extract(export_csv, "\\d{4}-\\d{2}-\\d{2}T\\d{2}_\\d{2}_\\d{2}") |>
+  as.POSIXct(format = "%Y-%m-%dT%H_%M_%S", tz = "UTC") |>
+  format("%B %e, %Y at %l:%M %p %Z", tz = "America/Chicago") |> str_squish()
+
+export_raw <- read.csv(export_csv)
+export     <- export_raw |> filter(!is.na(suppressWarnings(as.integer(index))))
+
+gf_list        <- jsonlite::read_json(export_json)
+export_json_df <- bind_rows(gf_list$resultSet)
+```
+
+I exported the results as CSV and JSON on `r export_time`. The search found `r format(as.integer(gf_list$TotalCount), big.mark = ",")` hearings, but the site only exports the first `r format(nrow(export), big.mark = ",")`. The CSV format has also changed since the 2024 file `govtdata01.R` reads with `skip = 2`: the header is now on line 1, and the search terms and total count are two extra rows at the bottom.
+
+```{r}
+tail(export_raw, 3) |> select(index, collection, packageId) |> kable()
+```
+
+The newest twelve in the export:
+
+```{r}
+export |>
+  slice_head(n = 12) |>
+  select(index, packageId, publishdate, title, pdfSize) |>
+  kable()
+```
+
+## 2. The GovInfo API
+
+### 2a. Collections
+
+```{r}
+#| code-fold: false
+bind_rows(collections$collections) |>
+  filter(collectionCode == "CHRG") |>
+  kable(format.args = list(big.mark = ","))
+
+chrg_since <- cached("api_chrg_since_2026-01-01.rds", \(x) {
+  govinfo("collections/CHRG/2026-01-01T00:00:00Z") |>
+    req_url_query(pageSize = 1000, offsetMark = "*") |>
+    req_perform() |> resp_body_json()
+})
+chrg_since$count
+```
+
+`r format(chrg_since$count, big.mark = ",")` hearings from all committees were added or changed since January 1, 2026.
+
+### 2b. Search
+
+The search body from the assignment, with my query from section 1:
+
+```{r}
+#| code-fold: false
+search_page <- function(query, offset_mark = "*", page_size = 100) {
+  govinfo("search") |>
+    req_body_json(list(
+      query      = query,
+      pageSize   = page_size,
+      offsetMark = offset_mark,
+      sorts      = list(list(field = "publishdate", sortOrder = "DESC"))
+    )) |>
+    req_perform() |>
+    resp_body_json()
+}
+
+found <- cached("api_search_page1.rds", \(x) search_page(committee_query))
+found$count
+```
+
+### 2c. One package
+
+```{r}
+#| code-fold: false
+summary1 <- cached("api_summary_first.rds", \(x) {
+  govinfo(paste0("packages/", found$results[[1]]$packageId, "/summary")) |>
+    req_perform() |> resp_body_json()
+})
+str(summary1[c("packageId", "title", "dateIssued", "heldDates", "pages", "chamber",
+               "suDocClassNumber", "lastModified")])
+names(summary1$download)
+```
+
+The `download` list here only has `premisLink`, `zipLink` and `modsLink`, not `pdfLink` or `txtLink`. The files are still there: `/packages/{packageId}/pdf` returns the PDF and `/packages/{packageId}/htm` the text.
+
+### 2d. Paging
+
+```{r}
+#| code-fold: false
+search_all <- function(query) {
+  out  <- list()
+  mark <- "*"
+  repeat {
+    page <- search_page(query, mark)
+    if (length(page$results) == 0) break
+    out  <- c(out, page$results)
+    mark <- page$offsetMark
+    if (is.null(mark)) break
+  }
+  bind_rows(map(out, \(r) r[c("packageId", "title", "dateIssued", "lastModified")]))
+}
+
+api_raw <- cached("api_search_all.rds", \(x) search_all(committee_query))
+api_all <- distinct(api_raw, packageId, .keep_all = TRUE)
+c(rows = nrow(api_raw), distinct = nrow(api_all))
+```
+
+```{r}
+dup <- api_raw |> filter(packageId %in% packageId[duplicated(packageId)])
+```
+
+Paging by 100 returned all `r format(nrow(api_raw), big.mark = ",")` results, past the export's 1,000 limit. One hearing, `r dup$packageId[1]`, is listed twice, so I keep one copy.
+
+## 3. Download the documents
+
+### 3a. The ten most recent, two ways
+
+Part A is the `download_govfiles_pdf()` function from `govtdata01.R`, run on the `pdfLink` column of my export. My copy of the script has no Part B, so I wrote it with `httr2` from section 2: it takes the ten newest from the API search in 2b and fetches each from `/packages/{packageId}/pdf`. Both wait 1 to 3 seconds between files.
+
+```{r}
+#| code-fold: false
+api_top10    <- api_all |> slice_head(n = 10) |> mutate(rank = row_number())
+export_top10 <- export  |> slice_head(n = 10) |> mutate(rank = row_number())
+
+log_file <- file.path(dir, "download_log.csv")
+
+# Part A: the function from govtdata01.R
+save_dir <- paste0(pdf_dir, "/")
+download_govfiles_pdf <- function(url, id) {
+  tryCatch({
+    destfile <- paste0(save_dir, "govfiles_", id, ".pdf")
+    download.file(url, destfile = destfile, mode = "wb") # Binary files
+    Sys.sleep(runif(1, 1, 3))
+    return(paste("Successfully downloaded:", url))
+  },
+  error = function(e) {
+    return(paste("Failed to download:", url))
+  })
+}
+
+# Part B: one package at a time from the API
+download_api_pdf <- function(id) {
+  destfile <- file.path(pdf_dir, paste0("api_", id, ".pdf"))
+  resp <- govinfo(paste0("packages/", id, "/pdf")) |>
+    req_error(is_error = \(r) FALSE) |>
+    req_perform(path = destfile)
+  Sys.sleep(runif(1, 1, 3))
+  paste("HTTP", resp_status(resp))
+}
+
+# one log row per file, with the time it finished
+log_row <- function(method, attempt, rank, id, url, file, result) {
+  tibble(method, attempt, rank, packageId = id, url, file, result,
+         bytes = file.size(file), md5 = unname(tools::md5sum(file)),
+         finished = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z", tz = "America/Chicago"))
+}
+
+run_a <- function(rows, attempt) {
+  pmap(list(rows$rank, rows$packageId, rows$pdfLink), \(rank, id, url) {
+    result <- download_govfiles_pdf(url, id)
+    log_row("A: export + download.file()", attempt, rank, id, url,
+            paste0(save_dir, "govfiles_", id, ".pdf"), result)
+  }) |> list_rbind()
+}
+
+if (!file.exists(log_file)) {
+  log_a1 <- run_a(export_top10, 1)
+
+  # retry the failures with a longer timeout than R's default of 60 seconds
+  failed <- export_top10 |> filter(packageId %in% log_a1$packageId[str_starts(log_a1$result, "Failed")])
+  old <- options(timeout = 600)
+  log_a2 <- run_a(failed, 2)
+  options(old)
+
+  log_b <- pmap(list(api_top10$rank, api_top10$packageId), \(rank, id) {
+    result <- download_api_pdf(id)
+    log_row("B: API /packages/{id}/pdf", 1, rank, id,
+            paste0("https://api.govinfo.gov/packages/", id, "/pdf"),
+            file.path(pdf_dir, paste0("api_", id, ".pdf")), result)
+  }) |> list_rbind()
+
+  bind_rows(log_a1, log_a2, log_b) |> write_csv(log_file)
+}
+
+dl_log <- read_csv(log_file, col_types = cols(.default = "c")) |>
+  mutate(across(c(attempt, rank, bytes), as.numeric))
+```
+
+**3b.** The PDFs are in `data/govinfo/pdf/`, which is in `.gitignore`. The [download log](data/govinfo/download_log.csv):
+
+```{r}
+dl_log |>
+  transmute(method, attempt, rank, packageId,
+            result = str_remove(result, ":.*"), bytes, finished) |>
+  kable(format.args = list(big.mark = ","))
+```
+
+```{r}
+a1     <- dl_log |> filter(str_starts(method, "A"), attempt == 1)
+a_fail <- a1 |> filter(str_starts(result, "Failed"))
+b_ok   <- dl_log |> filter(str_starts(method, "B"), result == "HTTP 200")
+```
+
+Part B got all `r nrow(b_ok)` files on the first try. Part A failed on `r nrow(a_fail)` large PDFs (`r paste(a_fail$packageId, collapse = " and ")`). R stops a download after 60 seconds by default, and the script's `tryCatch()` returned "Failed" but left the partial file on disk (`r paste(format(a_fail$bytes, big.mark = ","), collapse = " and ")` bytes). Without the log, those would look like real PDFs. The retry with `options(timeout = 600)` got both. Which files fail depends on download speed; in an earlier test run a different large file failed. `httr2` has no time limit by default, so Part B was not affected.
+
+### 3c. Same ten?
+
+```{r}
+full_join(
+  export_top10 |> select(rank, export = packageId, export_date = publishdate),
+  api_top10    |> select(rank, api = packageId, api_date = dateIssued),
+  by = "rank"
+) |>
+  mutate(same = export == api) |>
+  kable()
+```
+
+```{r}
+only_export <- setdiff(export_top10$packageId, api_top10$packageId)
+only_api    <- setdiff(api_top10$packageId, export_top10$packageId)
+tied <- api_all |> filter(packageId %in% c(only_export, only_api))
+
+# compare the final copy of each file
+final <- dl_log |>
+  group_by(method, packageId) |>
+  slice_max(attempt, n = 1) |>
+  ungroup() |>
+  mutate(method = str_sub(method, 1, 1)) |>
+  select(method, packageId, md5) |>
+  pivot_wider(names_from = method, values_from = md5)
+both_ways <- final |> filter(!is.na(A), !is.na(B))
+```
+
+Nine of the ten are the same. For tenth place the export has `r only_export` and the API has `r only_api`. Both hearings were held on `r unique(tied$dateIssued)`, and the website and the API break the tie in different orders. A second sort key, such as the S. Hrg. number, would make the list the same every time.
+
+The `r nrow(both_ways)` hearings downloaded both ways are `r if (all(both_ways$A == both_ways$B)) "identical files (same MD5)" else "not all identical files"`.
+
+The query matters more than the method. The assignment's phrase query gives a different list:
+
+```{r}
+#| code-fold: false
+phrase     <- cached("api_search_phrase.rds", \(x) search_page(phrase_query, page_size = 20))
+phrase_ids <- map_chr(phrase$results, "packageId")
+phrase$count
+missing <- api_all |> filter(packageId %in% setdiff(api_top10$packageId, phrase_ids[1:10]))
+missing |> select(packageId, dateIssued, title) |> kable()
+```
+
+It finds `r format(phrase$count, big.mark = ",")` hearings, including other committees, but misses `r nrow(missing)` of the committee's ten newest, even though the phrase appears in all four transcripts. With that query, the "ten most recent" would go back to `r min(map_chr(phrase$results[1:10], "dateIssued"))`.
+
+## 4. Report
+
+### 4a. How usable are the PDFs as data?
+
+```{r}
+pdfs <- dl_log |> filter(str_starts(method, "B"))
+
+pdf_stats <- pdfs |>
+  mutate(
+    pages = map_int(file, \(f) pdftools::pdf_info(f)$pages),
+    text  = map(file, pdftools::pdf_text),
+    words = map_int(text, \(t) sum(lengths(str_split(str_squish(t), " ")))),
+    empty_pages = map_int(text, \(t) sum(nchar(str_squish(t)) == 0)),
+    mb_per_page = bytes / 1e6 / pages
+  )
+
+pdf_stats |>
+  select(packageId, bytes, pages, words, empty_pages, mb_per_page) |>
+  kable(digits = 2, format.args = list(big.mark = ","))
+```
+
+All `r nrow(pdf_stats)` PDFs have a text layer: `pdftools` gets `r format(sum(pdf_stats$words), big.mark = ",")` words from `r sum(pdf_stats$pages)` pages, and only one blank page per file has no text. The five large files are large because of embedded images: poppler's `pdfimages` finds 12 to 31 in each, and none in the five small ones.
+
+The text still needs work. Here is page 2 of the first hearing from `pdf_text()`:
+
+```{r}
+cat(str_sub(pdf_stats$text[[1]][[2]], 1, 1000))
+```
+
+The two columns of senators end up on the same lines. Pages carry page numbers ("(II)" in the front matter, a number at the top of body pages), and words are split across lines with hyphens ("agree-"). To turn ten PDFs into a table or a corpus I would need to:
+
+1. Strip page numbers, headers and line-break hyphens, and rejoin paragraphs that cross pages.
+2. Split the front matter (roster, contents) from the hearing itself.
+3. Find each speaker turn ("The Chairman.", "Senator Shaheen.", "Mr. DiNanno.") and give it a speaker name, party and role.
+4. Separate the spoken hearing from inserted material such as prepared statements and answers to questions for the record.
+5. Join each turn to the hearing's metadata (date, title, S. Hrg. number) to get one row per speaker turn.
+
+### 4b. How would I improve the process?
+
+**Use the text, not the PDF.** `/packages/{id}/htm` returns the transcript as plain text, without page breaks. One regular expression finds the speaker turns:
+
+```{r}
+htm <- cached("api_htm_top10.rds", \(x) {
+  map(api_top10$packageId, \(id) {
+    Sys.sleep(1)
+    govinfo(paste0("packages/", id, "/htm")) |> req_perform() |> resp_body_string()
+  }) |> set_names(api_top10$packageId)
+})
+
+speaker_re <- "(?m)^ {4}(The Chairman|The Acting Chairman|Senator [A-Z][A-Za-z'-]+|(?:Mr|Ms|Mrs|Dr)\\. [A-Z][A-Za-z'-]+|Ambassador [A-Z][A-Za-z'-]+|Secretary [A-Z][A-Za-z'-]+|General [A-Z][A-Za-z'-]+|Admiral [A-Z][A-Za-z'-]+)\\.\\s"
+
+turns <- imap(htm, \(x, id) tibble(packageId = id, speaker = str_match_all(x, speaker_re)[[1]][, 2])) |>
+  list_rbind()
+
+turns |>
+  count(packageId, name = "turns") |>
+  left_join(turns |> count(packageId, speaker) |> group_by(packageId) |>
+              slice_max(n, n = 1, with_ties = FALSE) |>
+              transmute(packageId, most_turns = paste0(speaker, " (", n, ")")),
+            by = "packageId") |>
+  kable()
+```
+
+That gives `r format(nrow(turns), big.mark = ",")` speaker turns from about `r round(sum(map_int(htm, nchar)) / 1e6, 1)` MB of text, instead of `r round(sum(pdf_stats$bytes) / 1e6)` MB of PDFs. The pattern still needs checking: it misses other titles, and a name alone on a line counts as a turn.
+
+**Use the metadata first.** The MODS record (`/packages/{id}/mods`) lists the committee members with party, state and Bioguide ID, and the witnesses with title and organization:
+
+```{r}
+mods <- cached("api_mods_top10.rds", \(x) {
+  map(api_top10$packageId, \(id) {
+    Sys.sleep(1)
+    govinfo(paste0("packages/", id, "/mods")) |> req_perform() |> resp_body_string()
+  }) |> set_names(api_top10$packageId)
+})
+
+parse_mods <- function(x, id) {
+  doc <- xml2::read_xml(x) |> xml2::xml_ns_strip()
+  n   <- \(path) length(xml2::xml_find_all(doc, path))
+  tibble(
+    packageId = id,
+    held      = xml2::xml_text(xml2::xml_find_first(doc, ".//extension/heldDate")),
+    members   = n(".//extension/congMember"),
+    D         = n(".//extension/congMember[@party='D']"),
+    R         = n(".//extension/congMember[@party='R']"),
+    witnesses = n(".//extension/witness"),
+    first_witness = xml2::xml_text(xml2::xml_find_first(doc, ".//extension/witness")) |> coalesce("none listed")
+  )
+}
+
+imap(mods, parse_mods) |> list_rbind() |> kable()
+```
+
+That is a table of hearings and witnesses without opening a PDF. It still needs checks: the member list is the full committee, not who attended, three records have a member with no party, and two list no witnesses. Next time I would:
+
+- Search on the `committee` and `chamber` fields, not a phrase, and add a second sort key so ties come out the same way.
+- Page through the API instead of exporting, since the export stops at 1,000 rows and its format has changed.
+- Take metadata from MODS and text from `htm`, and only download PDFs when I need the pages.
+- Set a longer timeout and delete partial files when a download fails.
+- Use `/collections/CHRG/{date}` to fetch only what changed since the last run.
+
+### 4c. What the API gave me
+
+The API gave me every result instead of the first 1,000, metadata for each hearing (members, witnesses, dates), and the text without page layout, all in a documented format. The search page and last week's scraping only gave me what a page showed, in a layout that can change without notice, as the Wikipedia table and the export format both did.
