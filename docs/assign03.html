@@ -169,6 +169,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="./assign05.html">
  <span class="dropdown-text">Assignment 5</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./assign06.html">
+ <span class="dropdown-text">Assignment 6</span></a>
+  </li>  
     </ul>
   </li>
 </ul>
@@ -187,13 +191,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
-  <li><a href="#variables" id="toc-variables" class="nav-link" data-scroll-target="#variables">Variables</a></li>
-  <li><a href="#download" id="toc-download" class="nav-link" data-scroll-target="#download">Download</a></li>
-  <li><a href="#a.-map" id="toc-a.-map" class="nav-link" data-scroll-target="#a.-map">a. Map</a></li>
-  <li><a href="#b.-table" id="toc-b.-table" class="nav-link" data-scroll-target="#b.-table">b. Table</a></li>
-  <li><a href="#c.-uncertainty-check" id="toc-c.-uncertainty-check" class="nav-link" data-scroll-target="#c.-uncertainty-check">c.&nbsp;Uncertainty check</a></li>
-  <li><a href="#d.-methods-note" id="toc-d.-methods-note" class="nav-link" data-scroll-target="#d.-methods-note">d.&nbsp;Methods note</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">1. Setup</a></li>
+  <li><a href="#variables" id="toc-variables" class="nav-link" data-scroll-target="#variables">2. Variables</a></li>
+  <li><a href="#download" id="toc-download" class="nav-link" data-scroll-target="#download">3. Download</a></li>
+  <li><a href="#a.-map" id="toc-a.-map" class="nav-link" data-scroll-target="#a.-map">4a. Map</a></li>
+  <li><a href="#b.-table" id="toc-b.-table" class="nav-link" data-scroll-target="#b.-table">4b. Table</a></li>
+  <li><a href="#c.-uncertainty-check" id="toc-c.-uncertainty-check" class="nav-link" data-scroll-target="#c.-uncertainty-check">4c. Uncertainty check</a></li>
+  <li><a href="#d.-methods-note" id="toc-d.-methods-note" class="nav-link" data-scroll-target="#d.-methods-note">4d. Methods note</a></li>
   </ul>
 </nav>
     </div>
@@ -220,9 +224,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>This page uses tidycensus to pull ACS 2024 5-year estimates for every county in Texas. It maps median household income and ranks counties by poverty rate, keeping the margin of error (MOE) next to every estimate in the table.</p>
-<p>The four deliverables are labeled below: (a) map, (b) table, (c) uncertainty check and (d) methods note. The code for each step is under “Show code”.</p>
+<p>The deliverables from part 4 of the brief have their own headings below: 4a map, 4b table, 4c uncertainty check and 4d methods note. The code for each step is under “Show code”.</p>
 <section id="setup" class="level2">
-<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<h2 class="anchored" data-anchor-id="setup">1. Setup</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -243,7 +247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 <section id="variables" class="level2">
-<h2 class="anchored" data-anchor-id="variables">Variables</h2>
+<h2 class="anchored" data-anchor-id="variables">2. Variables</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -270,7 +274,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3) Parameters (EDIT ME)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3) Parameters</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>state_abbr <span class="ot">&lt;-</span> <span class="st">"TX"</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>geo_level  <span class="ot">&lt;-</span> <span class="st">"county"</span>   <span class="co"># options: state, county, tract, block group</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>my_vars    <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">income =</span> <span class="st">"B19013_001"</span>,   <span class="co"># median household income</span></span>
@@ -282,7 +286,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 <section id="download" class="level2">
-<h2 class="anchored" data-anchor-id="download">Download</h2>
+<h2 class="anchored" data-anchor-id="download">3. Download</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -305,11 +309,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 <section id="a.-map" class="level2">
-<h2 class="anchored" data-anchor-id="a.-map">a. Map</h2>
+<h2 class="anchored" data-anchor-id="a.-map">4a. Map</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 6) Map (edit titles/theme)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 6) Map</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(acs_wide) <span class="sc">+</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> incomeE), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(<span class="at">name =</span> <span class="st">"Median household income"</span>, <span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_dollar</span>()) <span class="sc">+</span></span>
@@ -317,7 +321,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="fu">paste0</span>(<span class="st">"ACS "</span>, year_acs <span class="sc">-</span> <span class="dv">4</span>, <span class="st">"–"</span>, year_acs, <span class="st">" 5-year estimates"</span>),</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Source: U.S. Census Bureau via tidycensus"</span>) <span class="sc">+</span></span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">family =</span> <span class="st">"Palatino"</span>),   <span class="co"># drop if not installed</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">family =</span> <span class="st">"Palatino"</span>),</span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.caption =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>),</span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid =</span> <span class="fu">element_blank</span>(),</span>
@@ -336,7 +340,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Incomes are highest in the suburban counties around Dallas, Houston, Austin and San Antonio, like Collin, Denton, Fort Bend, Williamson and Kendall. Rockwall County is the highest at $127,981 (± $4,257). They are lowest in South Texas, along and near the border, like Starr, Zapata and Zavala, and in some small rural counties. Swisher County is the lowest at $36,165, but its MOE is ± $14,512. A few small rural counties also show up bright, like Glasscock at $101,250, but with an MOE of ± $53,302. The shading for small counties is much less certain than for the big metro counties.</p>
 </section>
 <section id="b.-table" class="level2">
-<h2 class="anchored" data-anchor-id="b.-table">b. Table</h2>
+<h2 class="anchored" data-anchor-id="b.-table">4b. Table</h2>
 <p>Top and bottom ten counties by poverty rate, with the MOE beside each estimate. ACS MOEs are at the 90% confidence level. The rate MOE is in percentage points and the count MOE is in people.</p>
 <div class="cell">
 <details class="code-fold">
@@ -546,11 +550,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The full tidy dataset is here: <a href="acs_TX_2024.csv">acs_TX_2024.csv</a>.</p>
 </section>
 <section id="c.-uncertainty-check" class="level2">
-<h2 class="anchored" data-anchor-id="c.-uncertainty-check">c.&nbsp;Uncertainty check</h2>
+<h2 class="anchored" data-anchor-id="c.-uncertainty-check">4c. Uncertainty check</h2>
 <p>Dimmit County has the highest poverty rate in the table at 41.1% (± 8.9 points), so its 90% interval runs from 32.2% to 50.0%. Zapata County is second at 38.4% (± 6.0 points), from 32.4% to 44.4%. The two intervals overlap. Overlap is a rough check rather than a formal test, but here the gap between them is small next to both MOEs, so the data can’t tell us which county really has the higher rate. The table puts Dimmit County first, but a different sample could flip that order. The same is true for many other rows, especially small counties with wide MOEs, so the ranking is better read as high and low groups than as an exact order. Loving County is the extreme case: its 6.1% rests on 2 people out of 33, so its place in the table means very little.</p>
 </section>
 <section id="d.-methods-note" class="level2">
-<h2 class="anchored" data-anchor-id="d.-methods-note">d.&nbsp;Methods note</h2>
+<h2 class="anchored" data-anchor-id="d.-methods-note">4d. Methods note</h2>
 <p>I used counties because they cover all of Texas and most have samples large enough for usable estimates. Tracts would show more detail, but with much larger MOEs. I mapped median household income (B19013_001) and ranked counties by poverty rate: people below poverty (B17001_002) divided by the poverty universe (B17001_001), the people whose poverty status is determined. I used a rate because a count map mostly shows where people live, and I carried the rate’s MOE through with <code>moe_prop()</code> instead of dropping it.</p>
 <p>The MOEs here are at the 90% confidence level, and they change how I read the results. Large counties have small MOEs, so their estimates are precise: Collin County is 6.2% ± 0.4 points. Small counties have small samples and wide MOEs: Edwards County is 31.9% ± 23.2 points and Foard County is 5.6% ± 4.4 points. Many counties at the top and bottom of the ranking are small ones like these, so the extremes are where the estimates are least reliable. When two 90% intervals don’t overlap I read the gap as real, and when they overlap I treat the order as uncertain.</p>
 

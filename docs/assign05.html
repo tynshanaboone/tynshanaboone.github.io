@@ -167,6 +167,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="./assign05.html">
  <span class="dropdown-text">Assignment 5</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./assign06.html">
+ <span class="dropdown-text">Assignment 6</span></a>
+  </li>  
     </ul>
   </li>
 </ul>
@@ -298,27 +302,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>export_raw <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(export_csv)</span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>export     <span class="ot">&lt;-</span> export_raw <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">suppressWarnings</span>(<span class="fu">as.integer</span>(index))))</span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>gf_list        <span class="ot">&lt;-</span> jsonlite<span class="sc">::</span><span class="fu">read_json</span>(export_json)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>export_json_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(gf_list<span class="sc">$</span>resultSet)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>gf_list    <span class="ot">&lt;-</span> jsonlite<span class="sc">::</span><span class="fu">read_json</span>(export_json)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <p>I exported the results as CSV and JSON on October 11, 2026 at 6:29 PM CDT. The search found 1,171 hearings, but the site only exports the first 1,000. The CSV format has also changed since the 2024 file <code>govtdata01.R</code> reads with <code>skip = 2</code>: the header is now on line 1, and the search terms and total count are two extra rows at the bottom.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(export_raw, <span class="dv">3</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(index, collection, packageId) <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(export_raw, <span class="dv">3</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(index, collection, packageId) <span class="sc">|&gt;</span> <span class="fu">kable</span>(<span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 4%">
-<col style="width: 11%">
-<col style="width: 66%">
-<col style="width: 16%">
+<col style="width: 12%">
+<col style="width: 70%">
+<col style="width: 17%">
 </colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;"></th>
 <th style="text-align: left;">index</th>
 <th style="text-align: left;">collection</th>
 <th style="text-align: left;">packageId</th>
@@ -327,18 +328,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">1000</td>
-<td style="text-align: left;">1000</td>
 <td style="text-align: left;">Congressional Hearings</td>
 <td style="text-align: left;">CHRG-106shrg61049</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">1001</td>
 <td style="text-align: left;">Search Terms</td>
 <td style="text-align: left;">collection:(CHRG) AND committee:(Foreign Relations) AND chamber:(senate)</td>
 <td style="text-align: left;"></td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1002</td>
 <td style="text-align: left;">Total Count</td>
 <td style="text-align: left;">1171</td>
 <td style="text-align: left;"></td>
@@ -902,7 +900,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>b_ok   <span class="ot">&lt;-</span> dl_log <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="fu">str_starts</span>(method, <span class="st">"B"</span>), result <span class="sc">==</span> <span class="st">"HTTP 200"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>Part B got all 10 files on the first try. Part A failed on 2 large PDFs (CHRG-119shrg62398 and CHRG-119shrg61656). R stops a download after 60 seconds by default, and the script’s <code>tryCatch()</code> returned “Failed” but left the partial file on disk (7,427,944 and 6,303,248 bytes). Without the log, those would look like real PDFs. The retry with <code>options(timeout = 600)</code> got both. Which files fail depends on download speed; in an earlier test run a different large file failed. <code>httr2</code> has no time limit by default, so Part B was not affected.</p>
+<p>Part B got all 10 files on the first try. Part A failed on 2 large PDFs (CHRG-119shrg62398 and CHRG-119shrg61656). R stops a download after 60 seconds by default, and the script’s <code>tryCatch()</code> returned “Failed” but left the partial file on disk (7,427,944 and 6,303,248 bytes). Without the log, those would look like real PDFs. The retry with <code>options(timeout = 600)</code> got both. Which files fail depends on download speed. <code>httr2</code> has no time limit by default, so Part B was not affected.</p>
 </section>
 <section id="c.-same-ten" class="level3">
 <h3 class="anchored" data-anchor-id="c.-same-ten">3c. Same ten?</h3>
@@ -1040,9 +1038,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>both_ways <span class="ot">&lt;-</span> final <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(A), <span class="sc">!</span><span class="fu">is.na</span>(B))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>Nine of the ten are the same. For tenth place the export has CHRG-119shrg60060 and the API has CHRG-119shrg60819. Both hearings were held on 2025-03-26, and the website and the API break the tie in different orders. A second sort key, such as the S. Hrg. number, would make the list the same every time.</p>
+<p>Nine of the ten are the same. For tenth place the export has CHRG-119shrg60060 and the API has CHRG-119shrg60819. Both hearings were held on 2025-03-26, and the website and the API break the tie in different orders. Sorting my API list on a second key, such as the S. Hrg. number, would keep it the same on every run, but I cannot change how the website orders ties.</p>
 <p>The 9 hearings downloaded both ways are identical files (same MD5).</p>
-<p>The query matters more than the method. The assignment’s phrase query gives a different list:</p>
+<p>The query changes the list more than the method does. The assignment’s phrase query gives a different list:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>phrase     <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"api_search_phrase.rds"</span>, \(x) <span class="fu">search_page</span>(phrase_query, <span class="at">page_size =</span> <span class="dv">20</span>))</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>phrase_ids <span class="ot">&lt;-</span> <span class="fu">map_chr</span>(phrase<span class="sc">$</span>results, <span class="st">"packageId"</span>)</span>
@@ -1109,22 +1107,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">text  =</span> <span class="fu">map</span>(file, pdftools<span class="sc">::</span>pdf_text),</span>
 <span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">words =</span> <span class="fu">map_int</span>(text, \(t) <span class="fu">sum</span>(<span class="fu">lengths</span>(<span class="fu">str_split</span>(<span class="fu">str_squish</span>(t), <span class="st">" "</span>)))),</span>
 <span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">empty_pages =</span> <span class="fu">map_int</span>(text, \(t) <span class="fu">sum</span>(<span class="fu">nchar</span>(<span class="fu">str_squish</span>(t)) <span class="sc">==</span> <span class="dv">0</span>)),</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">mb_per_page =</span> bytes <span class="sc">/</span> <span class="fl">1e6</span> <span class="sc">/</span> pages</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>pdf_stats <span class="sc">|&gt;</span></span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(packageId, bytes, pages, words, empty_pages, mb_per_page) <span class="sc">|&gt;</span></span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format.args =</span> <span class="fu">list</span>(<span class="at">big.mark =</span> <span class="st">","</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">images =</span> <span class="fu">map_int</span>(file, \(f) <span class="fu">length</span>(<span class="fu">system2</span>(<span class="st">"pdfimages"</span>, <span class="fu">c</span>(<span class="st">"-list"</span>, <span class="fu">shQuote</span>(f)), <span class="at">stdout =</span> <span class="cn">TRUE</span>, <span class="at">stderr =</span> <span class="cn">FALSE</span>)) <span class="sc">-</span> <span class="dv">2</span>L),</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">mb_per_page =</span> bytes <span class="sc">/</span> <span class="fl">1e6</span> <span class="sc">/</span> pages</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>pdf_stats <span class="sc">|&gt;</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(packageId, bytes, pages, words, empty_pages, images, mb_per_page) <span class="sc">|&gt;</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format.args =</span> <span class="fu">list</span>(<span class="at">big.mark =</span> <span class="st">","</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 27%">
+<col style="width: 24%">
+<col style="width: 15%">
+<col style="width: 8%">
+<col style="width: 9%">
 <col style="width: 16%">
 <col style="width: 9%">
-<col style="width: 10%">
-<col style="width: 18%">
-<col style="width: 18%">
+<col style="width: 16%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -1133,6 +1133,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th style="text-align: right;">pages</th>
 <th style="text-align: right;">words</th>
 <th style="text-align: right;">empty_pages</th>
+<th style="text-align: right;">images</th>
 <th style="text-align: right;">mb_per_page</th>
 </tr>
 </thead>
@@ -1143,6 +1144,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">38</td>
 <td style="text-align: right;">19,458</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr class="even">
@@ -1151,6 +1153,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">42</td>
 <td style="text-align: right;">12,584</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">16</td>
 <td style="text-align: right;">0.22</td>
 </tr>
 <tr class="odd">
@@ -1159,6 +1162,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">31</td>
 <td style="text-align: right;">14,685</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr class="even">
@@ -1167,6 +1171,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">31</td>
 <td style="text-align: right;">15,115</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr class="odd">
@@ -1175,6 +1180,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">63</td>
 <td style="text-align: right;">14,462</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">31</td>
 <td style="text-align: right;">0.13</td>
 </tr>
 <tr class="even">
@@ -1183,6 +1189,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">36</td>
 <td style="text-align: right;">19,179</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr class="odd">
@@ -1191,6 +1198,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">58</td>
 <td style="text-align: right;">25,523</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">12</td>
 <td style="text-align: right;">0.21</td>
 </tr>
 <tr class="even">
@@ -1199,6 +1207,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">53</td>
 <td style="text-align: right;">28,512</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">0.01</td>
 </tr>
 <tr class="odd">
@@ -1207,6 +1216,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">54</td>
 <td style="text-align: right;">19,796</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">14</td>
 <td style="text-align: right;">0.07</td>
 </tr>
 <tr class="even">
@@ -1215,18 +1225,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">57</td>
 <td style="text-align: right;">20,007</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">19</td>
 <td style="text-align: right;">0.12</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<p>All 10 PDFs have a text layer: <code>pdftools</code> gets 189,321 words from 463 pages, and only one blank page per file has no text. The five large files are large because of embedded images: poppler’s <code>pdfimages</code> finds 12 to 31 in each, and none in the five small ones.</p>
+<p>All 10 PDFs have a text layer: <code>pdftools</code> gets 189,321 words from 463 pages, and each file has only 1 page with no text. The 5 large files are large because of embedded images: poppler’s <code>pdfimages -list</code> finds 12 to 31 in each, and none in the other 5.</p>
 <p>The text still needs work. Here is page 2 of the first hearing from <code>pdf_text()</code>:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">str_sub</span>(pdf_stats<span class="sc">$</span>text[[<span class="dv">1</span>]][[<span class="dv">2</span>]], <span class="dv">1</span>, <span class="dv">1000</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(pdf_stats<span class="sc">$</span>text[[<span class="dv">1</span>]][[<span class="dv">2</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>               COMMITTEE ON FOREIGN RELATIONS
@@ -1246,10 +1257,23 @@ JOHN CORNYN, Texas
                   NAZ DURAKOǦLU, Democratic Staff Director
                         JOHN DUTTON, Chief Clerk
 
-             </code></pre>
+                                  (II)</code></pre>
 </div>
 </div>
-<p>The two columns of senators end up on the same lines. Pages carry page numbers (“(II)” in the front matter, a number at the top of body pages), and words are split across lines with hyphens (“agree-”). To turn ten PDFs into a table or a corpus I would need to:</p>
+<p>The two columns of senators end up on the same lines. Pages carry page numbers (“(II)” in the front matter, a number at the top of body pages), and words are split across lines with hyphens. These lines from the same hearing end mid-word:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>lines1 <span class="ot">&lt;-</span> <span class="fu">str_split</span>(pdf_stats<span class="sc">$</span>text[[<span class="dv">1</span>]], <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>) <span class="sc">|&gt;</span> <span class="fu">unlist</span>() <span class="sc">|&gt;</span> <span class="fu">str_squish</span>()</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_subset</span>(lines1, <span class="st">"[a-z]-$"</span>) <span class="sc">|&gt;</span> <span class="fu">head</span>(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "DiNanno, Hon. Thomas G., Under Secretary for Arms Control and Inter-" 
+[2] "Present: Senators Risch [presiding], Ricketts, McCormick, Bar-"       
+[3] "timely issue given the President’s actions in Iran to address a near-"</code></pre>
+</div>
+</div>
+<p>To turn ten PDFs into a table or a corpus I would need to:</p>
 <ol type="1">
 <li>Strip page numbers, headers and line-break hyphens, and rejoin paragraphs that cross pages.</li>
 <li>Split the front matter (roster, contents) from the hearing itself.</li>
@@ -1264,25 +1288,25 @@ JOHN CORNYN, Texas
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>htm <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"api_htm_top10.rds"</span>, \(x) {</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(api_top10<span class="sc">$</span>packageId, \(id) {</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">govinfo</span>(<span class="fu">paste0</span>(<span class="st">"packages/"</span>, id, <span class="st">"/htm"</span>)) <span class="sc">|&gt;</span> <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> <span class="fu">resp_body_string</span>()</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span> <span class="fu">set_names</span>(api_top10<span class="sc">$</span>packageId)</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>speaker_re <span class="ot">&lt;-</span> <span class="st">"(?m)^ {4}(The Chairman|The Acting Chairman|Senator [A-Z][A-Za-z'-]+|(?:Mr|Ms|Mrs|Dr)</span><span class="sc">\\</span><span class="st">. [A-Z][A-Za-z'-]+|Ambassador [A-Z][A-Za-z'-]+|Secretary [A-Z][A-Za-z'-]+|General [A-Z][A-Za-z'-]+|Admiral [A-Z][A-Za-z'-]+)</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">s"</span></span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>turns <span class="ot">&lt;-</span> <span class="fu">imap</span>(htm, \(x, id) <span class="fu">tibble</span>(<span class="at">packageId =</span> id, <span class="at">speaker =</span> <span class="fu">str_match_all</span>(x, speaker_re)[[<span class="dv">1</span>]][, <span class="dv">2</span>])) <span class="sc">|&gt;</span></span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>()</span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>turns <span class="sc">|&gt;</span></span>
-<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(packageId, <span class="at">name =</span> <span class="st">"turns"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(turns <span class="sc">|&gt;</span> <span class="fu">count</span>(packageId, speaker) <span class="sc">|&gt;</span> <span class="fu">group_by</span>(packageId) <span class="sc">|&gt;</span></span>
-<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>              <span class="fu">slice_max</span>(n, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>              <span class="fu">transmute</span>(packageId, <span class="at">most_turns =</span> <span class="fu">paste0</span>(speaker, <span class="st">" ("</span>, n, <span class="st">")"</span>)),</span>
-<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="st">"packageId"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>htm <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"api_htm_top10.rds"</span>, \(x) {</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(api_top10<span class="sc">$</span>packageId, \(id) {</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">govinfo</span>(<span class="fu">paste0</span>(<span class="st">"packages/"</span>, id, <span class="st">"/htm"</span>)) <span class="sc">|&gt;</span> <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> <span class="fu">resp_body_string</span>()</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span> <span class="fu">set_names</span>(api_top10<span class="sc">$</span>packageId)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>speaker_re <span class="ot">&lt;-</span> <span class="st">"(?m)^ {4}(The Chairman|The Acting Chairman|Senator [A-Z][A-Za-z'-]+|(?:Mr|Ms|Mrs|Dr)</span><span class="sc">\\</span><span class="st">. [A-Z][A-Za-z'-]+|Ambassador [A-Z][A-Za-z'-]+|Secretary [A-Z][A-Za-z'-]+|General [A-Z][A-Za-z'-]+|Admiral [A-Z][A-Za-z'-]+)</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">s"</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>turns <span class="ot">&lt;-</span> <span class="fu">imap</span>(htm, \(x, id) <span class="fu">tibble</span>(<span class="at">packageId =</span> id, <span class="at">speaker =</span> <span class="fu">str_match_all</span>(x, speaker_re)[[<span class="dv">1</span>]][, <span class="dv">2</span>])) <span class="sc">|&gt;</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>()</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>turns <span class="sc">|&gt;</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(packageId, <span class="at">name =</span> <span class="st">"turns"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(turns <span class="sc">|&gt;</span> <span class="fu">count</span>(packageId, speaker) <span class="sc">|&gt;</span> <span class="fu">group_by</span>(packageId) <span class="sc">|&gt;</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>              <span class="fu">slice_max</span>(n, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>              <span class="fu">transmute</span>(packageId, <span class="at">most_turns =</span> <span class="fu">paste0</span>(speaker, <span class="st">" ("</span>, n, <span class="st">")"</span>)),</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="st">"packageId"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -1353,28 +1377,28 @@ JOHN CORNYN, Texas
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>mods <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"api_mods_top10.rds"</span>, \(x) {</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(api_top10<span class="sc">$</span>packageId, \(id) {</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">govinfo</span>(<span class="fu">paste0</span>(<span class="st">"packages/"</span>, id, <span class="st">"/mods"</span>)) <span class="sc">|&gt;</span> <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> <span class="fu">resp_body_string</span>()</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span> <span class="fu">set_names</span>(api_top10<span class="sc">$</span>packageId)</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>parse_mods <span class="ot">&lt;-</span> <span class="cf">function</span>(x, id) {</span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  doc <span class="ot">&lt;-</span> xml2<span class="sc">::</span><span class="fu">read_xml</span>(x) <span class="sc">|&gt;</span> xml2<span class="sc">::</span><span class="fu">xml_ns_strip</span>()</span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  n   <span class="ot">&lt;-</span> \(path) <span class="fu">length</span>(xml2<span class="sc">::</span><span class="fu">xml_find_all</span>(doc, path))</span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
-<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">packageId =</span> id,</span>
-<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">held      =</span> xml2<span class="sc">::</span><span class="fu">xml_text</span>(xml2<span class="sc">::</span><span class="fu">xml_find_first</span>(doc, <span class="st">".//extension/heldDate"</span>)),</span>
-<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">members   =</span> <span class="fu">n</span>(<span class="st">".//extension/congMember"</span>),</span>
-<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">D         =</span> <span class="fu">n</span>(<span class="st">".//extension/congMember[@party='D']"</span>),</span>
-<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">R         =</span> <span class="fu">n</span>(<span class="st">".//extension/congMember[@party='R']"</span>),</span>
-<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">witnesses =</span> <span class="fu">n</span>(<span class="st">".//extension/witness"</span>),</span>
-<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">first_witness =</span> xml2<span class="sc">::</span><span class="fu">xml_text</span>(xml2<span class="sc">::</span><span class="fu">xml_find_first</span>(doc, <span class="st">".//extension/witness"</span>)) <span class="sc">|&gt;</span> <span class="fu">coalesce</span>(<span class="st">"none listed"</span>)</span>
-<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a><span class="fu">imap</span>(mods, parse_mods) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>mods <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"api_mods_top10.rds"</span>, \(x) {</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(api_top10<span class="sc">$</span>packageId, \(id) {</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">govinfo</span>(<span class="fu">paste0</span>(<span class="st">"packages/"</span>, id, <span class="st">"/mods"</span>)) <span class="sc">|&gt;</span> <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> <span class="fu">resp_body_string</span>()</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span> <span class="fu">set_names</span>(api_top10<span class="sc">$</span>packageId)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>parse_mods <span class="ot">&lt;-</span> <span class="cf">function</span>(x, id) {</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  doc <span class="ot">&lt;-</span> xml2<span class="sc">::</span><span class="fu">read_xml</span>(x) <span class="sc">|&gt;</span> xml2<span class="sc">::</span><span class="fu">xml_ns_strip</span>()</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  n   <span class="ot">&lt;-</span> \(path) <span class="fu">length</span>(xml2<span class="sc">::</span><span class="fu">xml_find_all</span>(doc, path))</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">packageId =</span> id,</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">held      =</span> xml2<span class="sc">::</span><span class="fu">xml_text</span>(xml2<span class="sc">::</span><span class="fu">xml_find_first</span>(doc, <span class="st">".//extension/heldDate"</span>)),</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">members   =</span> <span class="fu">n</span>(<span class="st">".//extension/congMember"</span>),</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">D         =</span> <span class="fu">n</span>(<span class="st">".//extension/congMember[@party='D']"</span>),</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">R         =</span> <span class="fu">n</span>(<span class="st">".//extension/congMember[@party='R']"</span>),</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">witnesses =</span> <span class="fu">n</span>(<span class="st">".//extension/witness"</span>),</span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">first_witness =</span> xml2<span class="sc">::</span><span class="fu">xml_text</span>(xml2<span class="sc">::</span><span class="fu">xml_find_first</span>(doc, <span class="st">".//extension/witness"</span>)) <span class="sc">|&gt;</span> <span class="fu">coalesce</span>(<span class="st">"none listed"</span>)</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a><span class="fu">imap</span>(mods, parse_mods) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">

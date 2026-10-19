@@ -1,0 +1,691 @@
+---
+title: "Assignment 6: Text analytics with quanteda"
+execute:
+  message: false
+  warning: false
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
+---
+
+This page reads three corpora with `quanteda`: archived tweets from the November 2021 Biden–Xi summit, presidential documents I collected from the *Compilation of Presidential Documents* (CPD) on GovInfo, and the inaugural addresses since 1945. It also has YouTube comments on the October 2025 Trump–Xi meeting in Busan. Answers are labeled with the question numbers from the assignment.
+
+```{r}
+library(quanteda)
+library(quanteda.textstats)
+library(quanteda.textplots)
+library(quanteda.textmodels)
+library(tidyverse)
+library(httr2)
+library(rvest)
+library(knitr)
+
+cpd_dir <- "data/cpd"
+htm_dir <- file.path(cpd_dir, "htm")   # listed in .gitignore
+yt_dir  <- "data/youtube"
+tw_dir  <- "data/summit"               # listed in .gitignore
+walk(c(htm_dir, yt_dir, tw_dir), dir.create, showWarnings = FALSE, recursive = TRUE)
+
+# save each API response once, then read the saved copy
+cached <- function(path, f) {
+  if (!file.exists(path)) saveRDS(f(), path)
+  readRDS(path)
+}
+
+now_central <- function() format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z", tz = "America/Chicago")
+pct <- \(x) scales::percent(x, accuracy = 1)
+num <- \(x) format(x, big.mark = ",")
+theme_set(theme_bw())
+
+# keyness plot with room for the longest labels
+plot_keyness <- function(key, n = 20) textplot_keyness(key, n = n, labelsize = 3.5, margin = 0.2)
+```
+
+## 0. Set up and 1. Read
+
+```{r}
+pkgs <- c("quanteda", "quanteda.textstats", "quanteda.textplots", "quanteda.textmodels",
+          "tidyverse", "sentimentr", "syuzhet")
+tibble(package = pkgs, version = map_chr(pkgs, \(p) as.character(packageVersion(p)))) |> kable()
+```
+
+My copy of `quanteda_textanalytics01.R` from Teams covers Part 1: the summit tweets, LSA, the hashtag and mention networks, and sentiment with `sentimentr` and `syuzhet`. It has no code for Parts 2 and 3, so I wrote those from the assignment and the [quanteda tutorials](https://tutorials.quanteda.io): basic operations and `kwic()` (ch. 3), frequency, lexical diversity, keyness and similarity (ch. 4), and Wordfish (ch. 6, "Scaling and classification"). The GovInfo key from Assignment 5 and a YouTube Data API key are in `~/.Renviron` and are read with `Sys.getenv()`. Both are sent in request headers, so they are not on this page, in the logs or in the repository.
+
+## 2a. One summit, two kinds of text
+
+### 2a.i. The public: summit tweets
+
+```{r}
+summit <- cached(file.path(tw_dir, "summit.rds"), \(x) {
+  read_csv("https://raw.githubusercontent.com/datageneration/datamethods/master/textanalytics/summit_11162021.csv",
+           show_col_types = FALSE) |>
+    select(status_id, created_at, text, is_retweet, lang)
+}) |>
+  mutate(text = str_replace_all(text, "&amp;", "&"))
+
+low <- str_to_lower(summit$text)
+tw <- list(n = nrow(summit), first = min(summit$created_at), last = max(summit$created_at),
+           retweets = mean(summit$is_retweet), english = mean(summit$lang == "en"),
+           xi = mean(str_detect(low, "\\bxi\\b")), biden = mean(str_detect(low, "biden")),
+           old_friend = sum(str_detect(low, "old friend")), guardrails = sum(str_detect(low, "guardrail")),
+           rules = sum(str_detect(low, "rules of the road")))
+
+sum_twt <- summit$text
+```
+
+The dataset has `r num(tw$n)` tweets from `r format(tw$first, "%B %e")` to `r format(tw$last, "%B %e, %Y")` (UTC). `r pct(tw$retweets)` are retweets and `r pct(tw$english)` are in English. The file does not record the search query, but `r pct(tw$biden)` of the tweets contain "Biden" and `r pct(tw$xi)` contain "Xi". It was collected with the Twitter API, which no longer offers this access, so it cannot be collected again.
+
+**Frequent words.** Stopwords, URLs, hashtags and mentions are removed here; they get their own networks below.
+
+```{r}
+tw_words <- tokens(sum_twt, remove_punct = TRUE, remove_url = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) |>
+  tokens_remove(c(stopwords("en"), "amp", "rt", "#*", "@*")) |>
+  dfm()
+
+textstat_frequency(tw_words, n = 25) |>
+  ggplot(aes(x = reorder(feature, frequency), y = frequency)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = NULL, y = "Frequency", title = "Most frequent words in the summit tweets")
+```
+
+The retweets repeat a few texts many times. These are the three most repeated:
+
+```{r}
+summit |> count(text, sort = TRUE) |> slice_head(n = 3) |> mutate(text = str_trunc(text, 120)) |> kable()
+```
+
+**Hashtag network.** The code is from the class script.
+
+```{r}
+#| fig-height: 6
+tweet_dfm <- tokens(sum_twt, remove_punct = TRUE) |> dfm()
+
+tag_dfm <- dfm_select(tweet_dfm, pattern = "#*")
+toptag  <- names(topfeatures(tag_dfm, 50))
+head(toptag, 10)
+tag_fcm <- fcm(tag_dfm)
+topgat_fcm <- fcm_select(tag_fcm, pattern = toptag)
+textplot_network(topgat_fcm, min_freq = 50, edge_alpha = 0.8, edge_size = 1)
+```
+
+**Mention network.**
+
+```{r}
+#| fig-height: 6
+user_dfm <- dfm_select(tweet_dfm, pattern = "@*")
+topuser  <- names(topfeatures(user_dfm, 50))
+head(topuser, 20)
+user_fcm <- fcm(user_dfm)
+user_fcm <- fcm_select(user_fcm, pattern = topuser)
+textplot_network(user_fcm, min_freq = 20, edge_color = "firebrick", edge_alpha = 0.8, edge_size = 1)
+```
+
+The hashtags link the summit to other topics: `#coronavirus` and `#fentanyl` in the main cluster, a separate cluster on `#uyghurs`, `#tibetans` and `#humanrights`, and `#taiwan`. The most mentioned accounts are `@potus` and `@joebiden`, then news accounts and reporters. In the network, the accounts that appear together form small clusters: reporters around `@politico`, and `@eneskanter` with NBA accounts. Those last tweets are about Uyghur and Tibetan activists at a Wizards game and the NBA player Enes Kanter, urging Biden to raise human rights with Xi at the summit.
+
+**LSA.** The script keeps four dimensions (`nd = 4`). I ran it on the cleaned word matrix, keeping words that appear in at least 5 tweets. These are the words with the largest loadings on each dimension:
+
+```{r}
+lsa_dfm <- dfm_trim(tw_words, min_docfreq = 5)
+sum_lsa <- textmodel_lsa(lsa_dfm, nd = 4)
+
+as_tibble(sum_lsa$features, rownames = "feature") |>
+  pivot_longer(-feature, names_to = "dimension", values_to = "loading") |>
+  group_by(dimension) |>
+  slice_max(abs(loading), n = 10) |>
+  summarise(top_words = paste(feature, collapse = ", ")) |>
+  kable()
+```
+
+The first dimension is the summit itself (biden, xi, summit, virtual), so it mostly shows how many of the common words a tweet has. The others add quotes from the meeting ("said", "old friend", "candid") and "russia" and "ukraine". Since most tweets are retweets, a few repeated texts can shape these dimensions.
+
+**Sentiment** (from the class script):
+
+```{r}
+library(sentimentr)
+library(syuzhet)
+library(reshape2)
+
+sentiment_scores <- sentiment(sum_twt)
+agg_sentiment <- aggregate(sentiment_scores$sentiment, by = list(sentiment_scores$element_id), FUN = mean)
+colnames(agg_sentiment) <- c("tweet_id", "avg_sentiment")
+
+sentiment_comparison <- data.frame(
+  syuzhet = get_sentiment(sum_twt, method = "syuzhet"),
+  bing    = get_sentiment(sum_twt, method = "bing"),
+  afinn   = get_sentiment(sum_twt, method = "afinn"),
+  nrc     = get_sentiment(sum_twt, method = "nrc")
+)
+sentiment_melted <- melt(sentiment_comparison)
+
+ggplot(sentiment_melted, aes(x = variable, y = value, fill = variable)) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(title = "Sentiment Score Comparison Across Methods", x = "Sentiment Method", y = "Sentiment Score")
+
+round(cor(sentiment_comparison), 2)
+```
+
+The average `sentimentr` score per tweet is `r round(mean(agg_sentiment$avg_sentiment), 3)`, about neutral. The four lexicons agree only partly (correlations from `r min(round(cor(sentiment_comparison), 2))` to `r max(round(cor(sentiment_comparison)[upper.tri(diag(4))], 2))`), and they score single words, not what a tweet means. So I would not read much into the level.
+
+### 2a.ii. The government: Compilation of Presidential Documents
+
+The CPD is the official record of the President's public remarks, statements and orders, compiled by the Office of the Federal Register (OFR). I searched the CPD collection through the GovInfo API, paged through every result, took each package's summary for metadata, and downloaded each document's text from `/packages/{packageId}/htm`. The functions are the ones from Assignment 5. `govtdata01.R` only downloads from an exported list, so in Assignment 5 I wrote the API search and download with `httr2`. Here I reuse them and log each file.
+
+```{r}
+# every GovInfo call goes through this; the key comes from .Renviron and goes in a header
+govinfo <- function(path) {
+  request("https://api.govinfo.gov") |>
+    req_url_path_append(path) |>
+    req_headers(`X-Api-Key` = Sys.getenv("GOVINFO_API_KEY"), .redact = "X-Api-Key") |>
+    req_retry(max_tries = 3)
+}
+
+cpd_query <- 'collection:(CPD) AND "Xi Jinping" AND publishdate:range(2021-01-20,)'
+
+search_page <- function(query, offset_mark = "*") {
+  govinfo("search") |>
+    req_body_json(list(query = query, pageSize = 100, offsetMark = offset_mark,
+                       sorts = list(list(field = "publishdate", sortOrder = "DESC")))) |>
+    req_perform() |>
+    resp_body_json()
+}
+
+search_all <- function(query) {
+  out  <- list()
+  mark <- "*"
+  repeat {
+    page <- search_page(query, mark)
+    if (length(page$results) == 0) break
+    out  <- c(out, page$results)
+    mark <- page$offsetMark
+    if (is.null(mark)) break
+  }
+  bind_rows(map(out, \(r) r[c("packageId", "title", "dateIssued", "lastModified")]))
+}
+
+cpd_found <- cached(file.path(cpd_dir, "cpd_search.rds"), \(x) {
+  list(searched = now_central(), results = search_all(cpd_query))
+})
+ids <- unique(cpd_found$results$packageId)
+c(results = nrow(cpd_found$results), distinct = length(ids))
+```
+
+```{r}
+#| code-fold: false
+summaries <- cached(file.path(cpd_dir, "cpd_summaries.rds"), \(x) {
+  map(ids, \(id) {
+    Sys.sleep(runif(1, 0.5, 1.5))
+    govinfo(paste0("packages/", id, "/summary")) |> req_perform() |> resp_body_json()
+  }) |> set_names(ids)
+})
+
+log_file <- file.path(cpd_dir, "download_log.csv")
+done <- if (file.exists(log_file)) read_csv(log_file, show_col_types = FALSE)$packageId else character()
+
+# one file at a time, one log row per file, so an interrupted run picks up where it stopped
+for (id in setdiff(ids, done)) {
+  dest <- file.path(htm_dir, paste0(id, ".htm"))
+  resp <- govinfo(paste0("packages/", id, "/htm")) |>
+    req_error(is_error = \(r) FALSE) |>
+    req_perform(path = dest)
+  tibble(packageId = id, url = paste0("https://api.govinfo.gov/packages/", id, "/htm"),
+         status = resp_status(resp), bytes = file.size(dest),
+         md5 = unname(tools::md5sum(dest)), finished = now_central()) |>
+    write_csv(log_file, append = file.exists(log_file))
+  Sys.sleep(runif(1, 1, 2))
+}
+dl_log <- read_csv(log_file, show_col_types = FALSE)
+count(dl_log, status)
+```
+
+A CPD document is not all the President's words. Transcripts label each turn ("The President.", "Q." for a reporter, "Secretary Rubio.", "President Xi."). The OFR editors add subject headings inside transcripts ("China-U.S. Trade"), bracketed notes ("[Laughter]"), and at the end a note, categories, and an index of the names mentioned. So I split each document into the president's words, other speakers, and the editors' text. The speaker labels are found with a regular expression. It is a heuristic: a few paragraphs that start with a name, like a list of companies, are taken as another speaker.
+
+```{r}
+# transcripts label each turn ("The President.", "Q.", "Secretary Rubio."); a paragraph
+# without a label continues the last speaker, and an unlabeled document is all the president's
+president_re <- "^(The President|President Biden|President Trump)\\. "
+reporter_re  <- "^Q\\. "
+word_re      <- "(?:(?:Mr|Mrs|Ms|Dr|Lt|Col|Capt|Maj|Gen|Sen|Rep|Gov|Comd|U\\.S)\\.|[A-Z][A-Za-z'’-]*|of|de|da|la|bin)"
+other_re     <- paste0("^(?!(?:And|But|So|Alright|Okay|Well|Yes|No|Now|Oh|On|Go|Happy|That.s|Thank|Thanks|Good|Great|Right)\\b)",
+                       "(?:", word_re, " ){1,5}[A-Z][A-Za-z'’-]+\\. ")
+
+label_turns <- function(paras) {
+  # a few paragraphs hold more than one turn
+  paras <- unlist(str_split(paras, "\\s(?=(?:Q|The President|President Biden|President Trump)\\. )"))
+  # the editors add subject headings ("China-U.S. Trade") and bracketed notes ("[Laughter]")
+  heading <- nchar(paras) < 120 & !str_detect(paras, "[.?!:;,—–\"”’)…\\]]$")
+  bracket <- str_extract_all(paras, "\\[[^\\]]*\\]") |> map_chr(\(x) paste(x, collapse = " "))
+  text    <- str_squish(str_remove_all(paras, "\\[[^\\]]*\\]"))
+  speaker <- case_when(heading ~ "heading",
+                       str_detect(text, president_re) ~ "president",
+                       str_detect(text, reporter_re)  ~ "reporter",
+                       str_detect(text, other_re)     ~ "other",
+                       .default = NA_character_)
+  last <- "president"
+  for (i in seq_along(speaker)) {
+    if (is.na(speaker[i])) speaker[i] <- last
+    if (speaker[i] != "heading") last <- speaker[i]
+  }
+  tibble(speaker, text = if_else(heading, paras, str_remove(text, president_re)), bracket)
+}
+
+# split each document into the president's words, other speakers, and what the OFR editors added
+split_cpd <- function(file) {
+  paras <- read_html(file) |> html_elements("p, h1") |> html_text2() |> str_squish()
+  paras <- paras[paras != ""]
+  end   <- detect_index(paras, \(p) str_detect(p, "^(\\[Filed|NOTE:|Categories:|Names:|Subjects:|DCPD Number:)"))
+  if (end == 0) end <- length(paras) + 1
+  # administration line, title, and the date line when there is one
+  n_head <- if (str_detect(paras[3], paste0("^(", paste(month.name, collapse = "|"), ") \\d"))) 3 else 2
+  turns  <- label_turns(paras[seq_len(end - 1)][-seq_len(n_head)])
+  join   <- \(x) paste(x[x != ""], collapse = "\n")
+  tibble(header          = paste(head(paras, n_head), collapse = " | "),
+         president_words = join(turns$text[turns$speaker == "president"]),
+         others          = join(turns$text[turns$speaker %in% c("reporter", "other")]),
+         editors         = join(c(turns$text[turns$speaker == "heading"], turns$bracket,
+                                  paras[seq_along(paras) >= end])))
+}
+
+meta <- imap(summaries, \(s, id) tibble(
+  packageId  = id,
+  dateIssued = s$dateIssued,
+  title      = s$title,
+  president  = s$president$id %||% NA_character_,
+  category   = s$dcpdCategory[[1]]$level1 %||% NA_character_,
+  pages      = as.integer(s$pages %||% NA)
+)) |> list_rbind()
+
+docs <- meta |>
+  bind_cols(map(meta$packageId, \(id) split_cpd(file.path(htm_dir, paste0(id, ".htm")))) |> list_rbind()) |>
+  mutate(admin        = if_else(president == "JRB", "Biden", "Trump"),
+         xi_president = str_detect(president_words, "\\bXi\\b"),
+         xi_others    = str_detect(others, "\\bXi\\b"),
+         xi_editors   = str_detect(editors, "\\bXi\\b"),
+         digest       = str_detect(packageId, "DIGEST|CHECKLIST"),
+         xi_where     = case_when(digest ~ "annual digest or checklist",
+                                  xi_president ~ "the president",
+                                  xi_others ~ "only another speaker",
+                                  xi_editors ~ "only the editors",
+                                  .default = "nowhere in the text"))
+
+use <- docs |> filter(!digest)
+```
+
+The search found `r nrow(docs)` packages. `r sum(docs$digest)` are annual compilations: the "Digest of Other White House Announcements" and "Checklist of White House Press Releases" for 2021 to 2024, and the 2026 Digest so far. They are lists compiled by the editors and cover a whole year, so I keep them in the manifest but leave them out of the analysis. That leaves `r nrow(use)` documents:
+
+```{r}
+use |>
+  group_by(admin) |>
+  summarise(documents = n(), first = min(dateIssued), last = max(dateIssued),
+            `president's words` = num(sum(str_count(president_words, "\\S+"))),
+            `other speakers' words` = num(sum(str_count(others, "\\S+")))) |>
+  kable()
+
+use |> count(category, sort = TRUE) |> kable()
+```
+
+Who says "Xi" in each document?
+
+```{r}
+docs |> count(admin, xi_where) |> pivot_wider(names_from = admin, values_from = n, values_fill = 0) |> kable()
+```
+
+In `r sum(use$xi_where == "only the editors")` documents Xi is named only by the editors, in the index of names or the note at the end (for example, "The memorandum referred to President Xi Jinping of China"). In `r sum(use$xi_where == "only another speaker")` more, only a reporter or another leader says his name. The search matches the editors' index as well as the text, so it finds documents where the President never mentions Xi.
+
+**Xi in context.** `kwic()` on the president's words, with a window of 7 words. Here are a few lines from each administration:
+
+```{r}
+cpd_corp <- corpus(use, text_field = "president_words", docid_field = "packageId")
+cpd_toks <- tokens(cpd_corp, remove_punct = TRUE)
+kw <- kwic(cpd_toks, pattern = "Xi", case_insensitive = FALSE, window = 7)
+
+set.seed(6302)
+kw |>
+  as_tibble() |>
+  left_join(select(use, docname = packageId, admin, dateIssued), by = "docname") |>
+  group_by(admin) |>
+  slice_sample(n = 6) |>
+  ungroup() |>
+  select(admin, dateIssued, pre, keyword, post) |>
+  kable()
+```
+
+```{r}
+naming <- use |>
+  group_by(admin) |>
+  summarise(`"President Xi"` = sum(str_count(president_words, "President Xi\\b")),
+            `"Xi Jinping"`   = sum(str_count(president_words, "Xi Jinping")),
+            `all "Xi"`       = sum(str_count(president_words, "\\bXi\\b")))
+kable(naming)
+```
+
+`kwic()` finds `r num(nrow(kw))` mentions of Xi in the president's words. The two presidents name him differently. Biden uses the full name "Xi Jinping" in most of his mentions. Trump almost always says "President Xi".
+
+The summit is in the CPD as one document, *Remarks Prior to a Virtual Meeting With President Xi Jinping of China* (November 15, 2021). It has the opening remarks of both leaders. Xi's remarks are a translation and are labeled "President Xi.", so my split counts them as another speaker. The talks themselves were closed and are not in the CPD.
+
+```{r}
+summit_doc <- split_cpd(file.path(htm_dir, "DCPD-202100958.htm"))
+cat(str_trunc(summit_doc$president_words, 1500))
+```
+
+**Keyness: Biden and Trump administrations.** Keyness on all of each president's words in the corpus, with stopwords removed. Trump is the target:
+
+```{r}
+#| fig-height: 7
+cpd_dfm <- cpd_toks |>
+  tokens_remove(stopwords("en")) |>
+  tokens_group(groups = admin) |>
+  dfm()
+key_cpd <- textstat_keyness(cpd_dfm, target = "Trump")
+plot_keyness(key_cpd)
+```
+
+And only within 25 words of "Xi", to see how each talks about him:
+
+```{r}
+#| fig-height: 7
+xi_dfm <- kwic(cpd_toks, pattern = "Xi", case_insensitive = FALSE, window = 25) |>
+  as_tibble() |>
+  left_join(select(use, docname = packageId, admin), by = "docname") |>
+  mutate(text = paste(pre, post)) |>
+  corpus(text_field = "text") |>
+  tokens(remove_punct = TRUE) |>
+  tokens_remove(stopwords("en")) |>
+  tokens_group(groups = admin) |>
+  dfm()
+key_xi <- textstat_keyness(xi_dfm, target = "Trump")
+plot_keyness(key_xi)
+```
+
+Across all documents, Trump's key words are judgments ("great", "good", "bad", "beautiful", "tremendous") and topics of his term ("tariffs", "Iran"). Biden's are about domestic policy and values ("folks", "America", "nation", "jobs", "infrastructure", "democracy", "climate", "pandemic"). Near "Xi", Biden repeats one story: he has spent more time with Xi than with any other world leader, traveled 17,000 miles with him, and on the Tibetan Plateau Xi asked him to define America, and he said "possibilities". Trump talks about the relationship ("great", "good", "relationship", "get along", "respect", "deal") and about Xi coming to visit.
+
+The Busan meeting is in the CPD as three documents:
+
+```{r}
+use |> filter(dateIssued >= "2025-10-29", dateIssued <= "2025-10-31", str_detect(title, "Xi")) |>
+  select(packageId, dateIssued, title, category) |> kable()
+```
+
+### 2a.iv. Optional: YouTube comments on the Busan meeting
+
+I searched YouTube for "Trump Xi Busan", for videos published from October 29 to November 2, 2025, ordered by relevance, with English as the preferred language. Then I collected the top-level comments from every result that had comments. Replies are not included.
+
+```{r}
+yt <- function(endpoint, ...) {
+  request("https://www.googleapis.com/youtube/v3") |>
+    req_url_path_append(endpoint) |>
+    req_url_query(...) |>
+    req_headers(`X-goog-api-key` = Sys.getenv("YOUTUBE_API_KEY"), .redact = "X-goog-api-key") |>
+    req_retry(max_tries = 3)
+}
+
+yt_query <- list(q = "Trump Xi Busan", type = "video", order = "relevance", maxResults = 50,
+                 publishedAfter = "2025-10-29T00:00:00Z", publishedBefore = "2025-11-03T00:00:00Z",
+                 relevanceLanguage = "en")
+
+yt_search <- cached(file.path(yt_dir, "search.rds"), \(x) {
+  list(searched = now_central(),
+       response = exec(yt, "search", part = "snippet", !!!yt_query) |> req_perform() |> resp_body_json())
+})
+video_ids <- map_chr(yt_search$response$items, \(x) x$id$videoId)
+
+videos <- cached(file.path(yt_dir, "videos.rds"), \(x) {
+  yt("videos", part = "snippet,statistics,contentDetails", id = paste(video_ids, collapse = ",")) |>
+    req_perform() |> resp_body_json()
+})
+video_df <- map(videos$items, \(v) tibble(
+  rank      = match(v$id, video_ids),
+  videoId   = v$id,
+  channel   = v$snippet$channelTitle,
+  published = v$snippet$publishedAt,
+  title     = v$snippet$title,
+  duration  = v$contentDetails$duration,
+  views     = as.integer(v$statistics$viewCount %||% NA),
+  comment_count = as.integer(v$statistics$commentCount %||% NA)
+)) |> list_rbind() |> arrange(rank)
+
+get_comments <- function(id) {
+  out   <- list()
+  token <- NULL
+  pages <- 0
+  repeat {
+    resp <- yt("commentThreads", part = "snippet", videoId = id, maxResults = 100,
+               textFormat = "plainText", pageToken = token) |>
+      req_error(is_error = \(r) FALSE) |>
+      req_perform()
+    if (resp_status(resp) != 200) break
+    body  <- resp_body_json(resp)
+    pages <- pages + 1
+    out   <- c(out, body$items)
+    token <- body$nextPageToken
+    if (is.null(token)) break
+    Sys.sleep(0.5)
+  }
+  list(status = resp_status(resp), pages = pages,
+       comments = map(out, \(x) {
+         s <- x$snippet$topLevelComment$snippet
+         tibble(videoId = id, commentId = x$id, published = s$publishedAt,
+                likes = s$likeCount, replies = x$snippet$totalReplyCount, text = s$textDisplay)
+       }) |> list_rbind())
+}
+
+yt_log_file <- file.path(yt_dir, "collection_log.csv")
+comments <- cached(file.path(yt_dir, "comments.rds"), \(x) {
+  with_comments <- video_df |> filter(comment_count > 0)
+  got <- map(with_comments$videoId, \(id) {
+    res <- get_comments(id)
+    Sys.sleep(1)
+    res$log <- tibble(videoId = id, status = res$status, pages = res$pages,
+                      comments_collected = nrow(res$comments), finished = now_central())
+    res
+  })
+  map(got, "log") |> list_rbind() |> write_csv(yt_log_file)
+  map(got, "comments") |> list_rbind()
+})
+yt_log <- read_csv(yt_log_file, show_col_types = FALSE)
+
+video_manifest <- video_df |> left_join(select(yt_log, videoId, status, comments_collected), by = "videoId")
+write_csv(video_manifest, file.path(yt_dir, "video_manifest.csv"))
+
+video_manifest |>
+  filter(comments_collected > 0) |>
+  arrange(desc(comments_collected)) |>
+  slice_head(n = 10) |>
+  transmute(channel, title = str_trunc(title, 60), views = num(views), comments_collected) |>
+  kable()
+```
+
+The search on `r str_sub(yt_search$searched, 1, 10)` returned `r nrow(video_df)` videos. `r nrow(yt_log)` had comments, and I collected `r num(nrow(comments))` top-level comments, all with HTTP 200 (see the [collection log](data/youtube/collection_log.csv) and [video manifest](data/youtube/video_manifest.csv)). Most come from a few videos: NBC News, DWS News, CNA and the Associated Press. The comments were posted from `r str_sub(min(comments$published), 1, 10)` to `r str_sub(max(comments$published), 1, 10)`, so some came almost a year after the meeting. The comment text stays on my computer and is not posted here.
+
+To compare with the tweets I use only the original tweets (not retweets), since comments have nothing like retweets.
+
+```{r}
+#| fig-height: 7
+tw_orig <- summit |> filter(!is_retweet)
+both <- bind_rows(tibble(source = "Tweets 2021", text = tw_orig$text),
+                  tibble(source = "YouTube 2025", text = str_squish(comments$text)))
+
+both_dfm <- corpus(both) |>
+  tokens(remove_punct = TRUE, remove_url = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) |>
+  tokens_tolower() |>
+  tokens_keep("^[a-z][a-z'’-]+$", valuetype = "regex") |>
+  tokens_remove(c(stopwords("en"), "amp")) |>
+  tokens_group(groups = source) |>
+  dfm()
+plot_keyness(textstat_keyness(both_dfm, target = "YouTube 2025"))
+
+yt_compare <- both |>
+  mutate(sentiment = sentiment_by(text)$ave_sentiment,
+         hashtag = str_detect(text, "#\\w"), mention = str_detect(text, "@\\w"),
+         chinese = str_detect(text, "\\p{Han}")) |>
+  group_by(source) |>
+  summarise(texts = n(), mean_sentiment = round(mean(sentiment), 3),
+            positive = pct(mean(sentiment > 0.05)), negative = pct(mean(sentiment < -0.05)),
+            with_hashtag = pct(mean(hashtag)), with_mention = pct(mean(mention)),
+            chinese_characters = pct(mean(chinese)))
+kable(yt_compare)
+```
+
+The tweets are about the summit as an event ("summit", "virtual", "Biden", "Monday", "tensions", "Taiwan"). The comments are about Trump himself ("trump", "maga", "god bless", "great", "peace") and the deal ("rare earth", "deal"). The comments are a little more positive on average. Hashtags and mentions are almost absent, so the networks from 2a.i cannot be made from comments, and `r yt_compare$chinese_characters[2]` of the comments contain Chinese characters, which the English lexicons ignore.
+
+## 2b. US presidential inaugural addresses since 1945
+
+### 2b.i. Similarities and differences
+
+```{r}
+#| fig-height: 7
+inaug      <- corpus_subset(data_corpus_inaugural, Year >= 1945)
+inaug_toks <- tokens(inaug, remove_punct = TRUE)
+
+istats <- tibble(doc = docnames(inaug), year = inaug$Year, president = inaug$President,
+                 party = droplevels(inaug$Party), tokens = ntoken(inaug_toks)) |>
+  bind_cols(textstat_lexdiv(dfm(inaug_toks), measure = "TTR") |> select(TTR)) |>
+  bind_cols(textstat_lexdiv(inaug_toks, measure = "MATTR", MATTR_window = 100) |> select(MATTR)) |>
+  bind_cols(textstat_readability(inaug, measure = "Flesch.Kincaid") |> select(Flesch.Kincaid))
+
+istats |>
+  select(year, president, party, Length = tokens, `Lexical diversity (MATTR)` = MATTR,
+         `Grade level (Flesch-Kincaid)` = Flesch.Kincaid) |>
+  pivot_longer(Length:`Grade level (Flesch-Kincaid)`) |>
+  ggplot(aes(year, value, color = party, label = president)) +
+  geom_line(aes(group = 1), color = "grey70") +
+  geom_point(size = 2) +
+  geom_text(size = 2.5, vjust = -0.8, show.legend = FALSE) +
+  facet_wrap(~ name, ncol = 1, scales = "free_y") +
+  scale_y_continuous(expand = expansion(mult = c(0.08, 0.18))) +
+  scale_color_manual(values = c(Democratic = "#2b6cb0", Republican = "#c53030")) +
+  labs(x = NULL, y = NULL, color = NULL, title = "Inaugural addresses since 1945")
+
+cor(select(istats, year, tokens, TTR, MATTR, Flesch.Kincaid)) |> round(2) |> kable()
+```
+
+I use MATTR (the type-token ratio in moving windows of 100 words) for lexical diversity, because the plain type-token ratio falls as a speech gets longer: its correlation with length is `r round(cor(istats$TTR, istats$tokens), 2)`.
+
+```{r}
+#| fig-height: 7
+#| fig-width: 8
+inaug_dfm <- inaug_toks |> tokens_remove(stopwords("en")) |> dfm()
+sim <- textstat_simil(inaug_dfm, method = "cosine", margin = "documents") |> as.matrix()
+
+as_tibble(sim, rownames = "a") |>
+  pivot_longer(-a, names_to = "b", values_to = "cosine") |>
+  mutate(cosine = if_else(a == b, NA_real_, cosine),
+         a = factor(a, docnames(inaug)), b = factor(b, rev(docnames(inaug)))) |>
+  ggplot(aes(a, b, fill = cosine)) +
+  geom_tile() +
+  scale_fill_viridis_c(na.value = "white") +
+  labs(x = NULL, y = NULL, title = "Cosine similarity of inaugural addresses (stopwords removed)") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+diag(sim) <- NA
+nearest <- tibble(doc = rownames(sim), most_similar = colnames(sim)[apply(sim, 1, which.max)],
+                  cosine = round(apply(sim, 1, max, na.rm = TRUE), 2))
+# two Bushes, so match on first name too
+pres_of   <- \(d) with(docvars(inaug), paste(FirstName, President))[match(d, docnames(inaug))]
+n_two     <- sum(duplicated(pres_of(nearest$doc)) | duplicated(pres_of(nearest$doc), fromLast = TRUE))
+same_pres <- sum(pres_of(nearest$doc) == pres_of(nearest$most_similar))
+```
+
+```{r}
+#| fig-height: 6
+party_dfm <- inaug_toks |> tokens_remove(stopwords("en")) |> tokens_group(groups = Party) |> dfm()
+key_party <- textstat_keyness(party_dfm, target = "Republican")
+plot_keyness(key_party, n = 15)
+```
+
+- **Length** goes up over time (correlation with year `r round(cor(istats$year, istats$tokens), 2)`). The shortest is Roosevelt's wartime fourth inaugural in 1945 (`r num(istats$tokens[1])` words) and the longest is Trump's in 2025 (`r num(max(istats$tokens))`).
+- **Lexical diversity** (MATTR) rises slightly over time (`r round(cor(istats$year, istats$MATTR), 2)`). The two parties are almost the same (`r round(mean(istats$MATTR[istats$party == "Democratic"]), 3)` vs `r round(mean(istats$MATTR[istats$party == "Republican"]), 3)`).
+- **Readability** has no trend. The Flesch-Kincaid grade goes from `r round(min(istats$Flesch.Kincaid), 1)` (Biden 2021, short sentences) to `r round(max(istats$Flesch.Kincaid), 1)` (Nixon 1973).
+- **Cosine similarity**: a speech is most like the same president's other speech. Of the `r n_two` speeches by presidents who gave two, `r same_pres` are closest to that president's other speech. The most similar pair is Reagan 1981 and 1985 (`r round(max(sim, na.rm = TRUE), 2)`); the least similar is Roosevelt 1945 and Trump 2025 (`r round(min(sim, na.rm = TRUE), 2)`).
+- **Keyness by party** is weak. There are only 11 Republican and 10 Democratic speeches, and the strongest chi-squared values are about 10 to 20. Democrats use "democracy", "change", "must", "generation" and "journey" more. Republicans use "federal", "government", "freedom", "country" and "great" more.
+
+Overall, the speeches differ more by year and by president than by party.
+
+### 2b.ii. Is the 2025 address in the corpus?
+
+```{r}
+tail(docvars(data_corpus_inaugural) |> select(Year, President, FirstName, Party), 3) |> kable()
+```
+
+Yes. The latest address in `data_corpus_inaugural` (quanteda `r packageVersion("quanteda")`) is Trump's of January 20, 2025. If it were missing, I would take it from the same source as Part 2: the CPD has it as package `DCPD-202500103`. I would download the text from the API, keep the president's words, and add it with `corpus()` and docvars matching the existing ones (Year, President, FirstName, Party) before combining with `c()`. As a check, here is the CPD version next to quanteda's:
+
+```{r}
+inaug25 <- cached(file.path(htm_dir, "inaugural_2025.rds"), \(x) {
+  hit <- search_page('collection:(CPD) AND title:("Inaugural Address") AND publishdate:range(2025-01-20,2025-01-31)')
+  id  <- hit$results[[1]]$packageId
+  list(packageId = id, title = hit$results[[1]]$title,
+       htm = govinfo(paste0("packages/", id, "/htm")) |> req_perform() |> resp_body_string())
+})
+tmp <- tempfile(fileext = ".htm")
+writeLines(inaug25$htm, tmp)
+cpd25 <- split_cpd(tmp)
+
+new_doc <- corpus(cpd25$president_words, docnames = "2025-Trump-CPD",
+                  docvars = data.frame(Year = 2025L, President = "Trump", FirstName = "Donald J.", Party = "Republican"))
+c(CPD = ntoken(tokens(new_doc, remove_punct = TRUE)),
+  quanteda = ntoken(tokens(data_corpus_inaugural["2025-Trump"], remove_punct = TRUE)))
+```
+
+The two versions differ by `r abs(diff(c(ntoken(tokens(new_doc, remove_punct = TRUE)), ntoken(tokens(data_corpus_inaugural["2025-Trump"], remove_punct = TRUE)))))` tokens out of about 2,900. The American Presidency Project and the White House website also post the text, but the CPD is the official record and comes with metadata.
+
+## 3. Wordfish
+
+```{r}
+#| fig-height: 6
+wf_dfm <- tokens(inaug, remove_punct = TRUE, remove_numbers = TRUE) |>
+  tokens_remove(stopwords("en")) |>
+  dfm() |>
+  dfm_trim(min_docfreq = 2)
+wf <- textmodel_wordfish(wf_dfm, dir = c(which(docnames(wf_dfm) == "1949-Truman"),
+                                         which(docnames(wf_dfm) == "2025-Trump")))
+textplot_scale1d(wf, groups = droplevels(inaug$Party))
+```
+
+```{r}
+#| fig-height: 6
+textplot_scale1d(wf, margin = "features",
+                 highlighted = c("peoples", "resources", "equality", "freedom",
+                                 "thank", "borders", "jobs", "protect", "everyone", "democracy"),
+                 highlighted_color = "firebrick")
+
+wf_fit <- tibble(year = inaug$Year, party = droplevels(inaug$Party), theta = wf$theta)
+wf_lm  <- lm(theta ~ year + party, data = wf_fit)
+round(summary(wf_lm)$coefficients, 3)
+```
+
+The model uses `r nrow(wf_dfm)` speeches and `r num(nfeat(wf_dfm))` words (stopwords removed, words in at least two speeches). The estimated positions correlate `r round(cor(wf_fit$theta, wf_fit$year), 2)` with the year. With the year held constant, party adds almost nothing (`r round(coef(wf_lm)["partyRepublican"], 2)`, p = `r round(summary(wf_lm)$coefficients["partyRepublican", 4], 2)`).
+
+## 4. Report
+
+**Two kinds of text (2a.iii).** The tweets show what people on Twitter passed around during the summit week, and most of it was the news. `r pct(tw$retweets)` are retweets, and many repeat quotes from the opening remarks in the CPD transcript: "old friend" (`r num(tw$old_friend)` tweets), "guardrails" (`r num(tw$guardrails)`), "rules of the road" (`r num(tw$rules)`). The hashtags and mentions add what the official text leaves out: COVID, fentanyl, Taiwan, and activists urging Biden to raise the Uyghurs and Tibet. The tweets cannot say what was agreed, and they are not a sample of the public. They were written by accounts that used the collector's keywords in that window, for their followers.
+
+The CPD has the President's public words as spoken. For the summit it has one document, the remarks before the closed talks. Over five years it shows how each White House talked about China. Biden says "Xi Jinping" and retells his personal history with him. Trump says "President Xi" and talks about a great relationship, deals and tariffs. The White House produced these texts for the press and the public record, and the OFR edited them. They show how the presidents presented policy in public. They do not show how it was made. The 2025 YouTube comments were written by viewers of a few news videos, for other viewers, and are more about Trump than about China.
+
+**Data-generating processes.** The tweets were chosen by a keyword and a collection window. So the frequent words and LSA describe what spread among those accounts, mostly retweets of a few posts. The CPD documents were chosen first by the White House (what it released), then by an OFR editor (what goes in, plus headings, notes and an index of names), and then by my query. The query matches that index, so `r sum(use$xi_where == "only the editors")` documents are in the corpus only because an editor listed Xi. The keyness compares what each White House released, including Trump's long press exchanges (`r num(sum(str_count(use$president_words[use$admin == "Trump"], "\\S+")))` words in `r sum(use$admin == "Trump")` documents against `r num(sum(str_count(use$president_words[use$admin == "Biden"], "\\S+")))` in `r sum(use$admin == "Biden")`). So it compares two ways of talking in public. It says little about the two China policies. The inaugurals were chosen by tradition: one speech per term, the same occasion, written for the nation. The 21 speeches are all there is, so differences between them come from the year and the speaker. With only 21, party keyness is weak.
+
+**What Wordfish measures (3b).** Wordfish (Slapin and Proksch 2008) assumes each word count in a speech is drawn from a Poisson distribution, with a rate set by the speech's length, the word's overall frequency, and the speech's position on one hidden dimension times the word's weight on it. Words are independent of each other and their order is ignored. On the inaugurals the dimension seems to measure time. It correlates `r round(cor(wf_fit$theta, wf_fit$year), 2)` with the year, and party adds nothing. Postwar words ("peoples", "resources", "program", "equality") are at one end; "thank", "everyone", "borders", "jobs" and "protect" are at the other. It could be the policy words of each era, or a change from formal to direct speech. To show what it measures I would need outside evidence: correlation with an independent measure (such as hand-coded tone or expert ideology scores), stable results when I change the preprocessing, and the same dimension found within one era. I must set `dir` because the model is identified only up to its sign. Flipping every position and word weight fits the data equally well. `dir = c(Truman 1949, Trump 2025)` puts Truman below Trump, so later speeches are on the positive side. Without it, the direction is arbitrary.
+
+## Data note: the CPD collection
+
+```{r}
+manifest <- docs |>
+  left_join(select(dl_log, packageId, url, status, bytes, md5), by = "packageId") |>
+  transmute(packageId, dateIssued, administration = admin, category, title, pages,
+            included = !digest, xi_named_by = xi_where, url, status, bytes, md5)
+write_csv(manifest, file.path(cpd_dir, "manifest.csv"))
+```
+
+- **Source.** *Compilation of Presidential Documents* (collection CPD), published by the Office of the Federal Register, National Archives and Records Administration, on GovInfo. Accessed through the GovInfo API (`api.govinfo.gov`): `/search`, `/packages/{id}/summary` and `/packages/{id}/htm`.
+- **Permission.** Works of the US government are in the public domain (17 U.S.C. § 105). The API needs a free api.data.gov key. I waited 1 to 2 seconds between downloads, well under the rate limit.
+- **Query.** `r cpd_query`, sorted by publish date, paged 100 at a time, run on `r cpd_found$searched`.
+- **Selection.** The search returned `r nrow(docs)` packages, all downloaded (HTTP 200). I excluded the `r sum(docs$digest)` annual digests and checklists, leaving `r nrow(use)` documents: `r sum(use$admin == "Biden")` from Biden and `r sum(use$admin == "Trump")` from Trump. The administration comes from each package's `president` field. Text analysis uses only the president's words, split from other speakers and from editors' headings, brackets and notes with the regular expressions above.
+- **Gaps.** The search matches the editors' index of names, so `r sum(use$xi_where == "only the editors")` documents are included only because the editors list Xi, and in `r sum(use$xi_where == "only another speaker")` more only a reporter or another leader says his name. A document where the President says only "Xi" and the editors do not list the full name could be missed. There are no results between January 20 and March 17, 2021, although Biden called Xi on February 10, 2021. That call appears only as a line in the 2021 Digest, not as a document of its own. The latest document is from `r max(use$dateIssued)`, so the CPD seems to run a few weeks behind, and there is no 2025 Digest yet. Translated remarks by foreign leaders and reporters' questions are in the documents but not in my analysis. The speaker split is a heuristic.
+
+## Files
+
+- [CPD download log](data/cpd/download_log.csv): one row per document, with URL, HTTP status, size, MD5 and time.
+- [CPD manifest](data/cpd/manifest.csv): every package the search returned, with date, administration, category, title, whether it is included, and who names Xi in it.
+- [YouTube video manifest](data/youtube/video_manifest.csv) and [collection log](data/youtube/collection_log.csv).
+
+The CPD documents (`data/cpd/htm/`), the YouTube comment text and my copy of the tweets are not posted, and neither are the API keys.

@@ -9,3 +9,8 @@
 
 # GovInfo hearing PDFs (assignment 5), not published
 data/govinfo/pdf/
+
+# assignment 6: documents and comment text are not published, only the logs and manifests
+data/cpd/htm/
+data/summit/
+data/youtube/comments.rds

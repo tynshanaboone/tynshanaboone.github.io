@@ -167,6 +167,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="./assign05.html">
  <span class="dropdown-text">Assignment 5</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="./assign06.html">
+ <span class="dropdown-text">Assignment 6</span></a>
+  </li>  
     </ul>
   </li>
 </ul>
@@ -459,7 +463,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>the_df <span class="ot">&lt;-</span> TrumpHarrisElection<span class="sc">$</span>interest_over_time</span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(TrumpHarrisElection)</span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Cache the raw pull - the next call will not return the same numbers</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># save the raw pull, a later call may not return the same numbers</span></span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(the_df, <span class="fu">paste0</span>(<span class="st">"gtrends_us_5y_"</span>, <span class="fu">Sys.Date</span>(), <span class="st">".csv"</span>))</span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Rest of gtrendsR01.R (adapted)</span></span>
@@ -526,7 +530,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>They are not the same. “Harris” peaks the week of November 3, 2024, election week, while “Kamala Harris” peaks the week of July 21, 2024, when Biden dropped out and she became the likely nominee. The two peaks are close in both series, so that order could flip in another sample. Relative to its own peak, “Harris” also stays higher the rest of the time (median 7 vs 1), likely because it also picks up the county, the supermarket and everyone else named Harris. That gap is the difference between a term and a concept. “Harris” measures interest in Kamala Harris plus other things, so the wording decides what I end up measuring.</p>
+<p>They are not the same. “Harris” peaks the week of November 3, 2024, election week, while “Kamala Harris” peaks the week of July 21, 2024, when Biden dropped out and she became the likely nominee. The two peaks are close in both series, so that order could flip in another sample. Relative to its own peak, “Harris” also stays higher the rest of the time (median 7 vs 1), likely because it also picks up the county, the supermarket and everyone else named Harris. “Harris” measures interest in Kamala Harris plus other things, so the wording decides what I end up measuring.</p>
 </section>
 <section id="comparing-the-two-methods" class="level2">
 <h2 class="anchored" data-anchor-id="comparing-the-two-methods">4. Comparing the two methods</h2>
@@ -539,10 +543,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>both <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(web_long, r_long, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"date"</span>, <span class="st">"keyword"</span>))</span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>first_long <span class="ot">&lt;-</span> r_first<span class="sc">$</span>interest_over_time <span class="sc">|&gt;</span> <span class="fu">transmute</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(date), keyword, <span class="at">r =</span> <span class="fu">as.character</span>(hits))</span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>script_match <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(web_long, first_long, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"date"</span>, <span class="st">"keyword"</span>))</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>t_first  <span class="ot">&lt;-</span> <span class="fu">max</span>(r_log<span class="sc">$</span>pulled_utc[r_log<span class="sc">$</span>name <span class="sc">==</span> <span class="st">"trump_harris_election_us_5y"</span> <span class="sc">&amp;</span> r_log<span class="sc">$</span>ok])</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>t_repeat <span class="ot">&lt;-</span> r_log<span class="sc">$</span>pulled_utc[r_log<span class="sc">$</span>name <span class="sc">==</span> <span class="st">"trump_harris_election_us_5y_repeat2"</span>]</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>gap_min  <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">as.numeric</span>(<span class="fu">difftime</span>(t_repeat, t_first, <span class="at">units =</span> <span class="st">"mins"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># script's Harris against the website's Kamala Harris, week by week</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>harris <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(<span class="fu">filter</span>(web_long, keyword <span class="sc">==</span> <span class="st">"Kamala Harris"</span>), <span class="fu">filter</span>(first_long, keyword <span class="sc">==</span> <span class="st">"Harris"</span>), <span class="at">by =</span> <span class="st">"date"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">web =</span> <span class="fu">num</span>(web), <span class="at">r =</span> <span class="fu">num</span>(r))</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>t_first  <span class="ot">&lt;-</span> <span class="fu">max</span>(r_log<span class="sc">$</span>pulled_utc[r_log<span class="sc">$</span>name <span class="sc">==</span> <span class="st">"trump_harris_election_us_5y"</span> <span class="sc">&amp;</span> r_log<span class="sc">$</span>ok])</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>t_repeat <span class="ot">&lt;-</span> r_log<span class="sc">$</span>pulled_utc[r_log<span class="sc">$</span>name <span class="sc">==</span> <span class="st">"trump_harris_election_us_5y_repeat2"</span>]</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>gap_min  <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">as.numeric</span>(<span class="fu">difftime</span>(t_repeat, t_first, <span class="at">units =</span> <span class="st">"mins"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="cell">
@@ -567,12 +574,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p><strong>4a. Are the numbers identical?</strong> Yes. I ran the exact website query in R (Kamala Harris, not Harris), and all 786 of 786 values match, with no gap in either direction. The script’s own query with “Harris” also matches the website exactly for Trump (262 of 262) and election (262 of 262), because election’s spike sets the 100 in both. Only the Harris column differs.</p>
+<p><strong>4a. Are the numbers identical?</strong> Yes. I ran the exact website query in R (Kamala Harris, not Harris), and all 786 of 786 values match, with no gap in either direction. The script’s own query with “Harris” also matches the website exactly for Trump (262 of 262) and election (262 of 262), because election’s spike sets the 100 in both. Only the Harris column differs, and it is higher than the website’s Kamala Harris in 262 of 262 weeks. Most weeks it is 1 where Kamala Harris is &lt;1, and it peaks at 11 against 7.</p>
 <p><strong>4b(i). Reproducibility.</strong> Neither method lets someone else regenerate my file exactly. “Past 5 years” is a moving window, so the same settings cover different weeks tomorrow, and Trends is built from a sample. The R code makes re-running easy, but only my cached files hold these exact numbers.</p>
-<p><strong>4b(ii). Provenance.</strong> R records the query for me: every row carries the keyword, geography, window, search type and category. It does not record when it ran, and “today+5-y” does not say which five years, so I logged the pull times myself. The website CSV only notes the category and geography, so I had to write down everything else in the datasheet.</p>
+<p><strong>4b(ii). Provenance.</strong> R records the query for me: every row carries the keyword, geography, window, search type and category. It does not record when it ran, and “today+5-y” does not say which five years, so I logged the pull times myself. The website CSV notes the terms, the geography, the category and that the values are weekly. It does not note the time window setting, the search type or when I downloaded it, so I wrote those down in the datasheet.</p>
 <p><strong>4b(iii). Scale.</strong> Both allow five terms per query. Fifty terms means at least ten separate searches, each on its own 0-100 scale. In R that is a loop, but the rescaling problem stays, and fifty requests run into rate limits.</p>
 <p><strong>4b(iv). Fragility.</strong> gtrendsR scrapes a service with no general public API. Of my first nine calls, 3 failed and worked a few minutes later. I knew because R threw an error. If Google quietly changed its scaling, nothing would error. On the website, a wrong setting or a changed page layout only gets caught if every choice was recorded.</p>
-<p><strong>4c. Same call twice.</strong> Run again 4 minutes later, the first call returned the same numbers, 786 of 786 values, so Google appears to reuse the same sample over a short window. That does not prove the data is stable. Trends is a sample, and my test only covered a few minutes. Every finding from this source needs its exact query and pull time, and should come from a saved file, not a fresh call.</p>
+<p><strong>4c. Same call twice.</strong> When I ran the first call again 4 minutes later, it returned the same numbers, 786 of 786 values, so Google appears to reuse the same sample over a short window. That does not prove the data is stable. Trends is a sample, and my test only covered a few minutes. Every finding from this source needs its exact query and pull time, and should come from a saved file, not a fresh call.</p>
 
 
 </section>

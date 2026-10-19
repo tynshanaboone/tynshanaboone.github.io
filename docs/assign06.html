@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Assignment 6: Text analytics with quanteda – Tynshana Boone</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-445b8638c3d06994fee0907d791121c4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Tynshana Boone</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-assignments" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Assignments</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-assignments">    
+        <li>
+    <a class="dropdown-item" href="./assign01.html">
+ <span class="dropdown-text">Assignment 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./assign02.html">
+ <span class="dropdown-text">Assignment 2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./assign03.html">
+ <span class="dropdown-text">Assignment 3</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./assign04.html">
+ <span class="dropdown-text">Assignment 4</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./assign05.html">
+ <span class="dropdown-text">Assignment 5</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./assign06.html">
+ <span class="dropdown-text">Assignment 6</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#set-up-and-1.-read" id="toc-set-up-and-1.-read" class="nav-link active" data-scroll-target="#set-up-and-1.-read">0. Set up and 1. Read</a></li>
+  <li><a href="#a.-one-summit-two-kinds-of-text" id="toc-a.-one-summit-two-kinds-of-text" class="nav-link" data-scroll-target="#a.-one-summit-two-kinds-of-text">2a. One summit, two kinds of text</a>
+  <ul class="collapse">
+  <li><a href="#a.i.-the-public-summit-tweets" id="toc-a.i.-the-public-summit-tweets" class="nav-link" data-scroll-target="#a.i.-the-public-summit-tweets">2a.i. The public: summit tweets</a></li>
+  <li><a href="#a.ii.-the-government-compilation-of-presidential-documents" id="toc-a.ii.-the-government-compilation-of-presidential-documents" class="nav-link" data-scroll-target="#a.ii.-the-government-compilation-of-presidential-documents">2a.ii. The government: Compilation of Presidential Documents</a></li>
+  <li><a href="#a.iv.-optional-youtube-comments-on-the-busan-meeting" id="toc-a.iv.-optional-youtube-comments-on-the-busan-meeting" class="nav-link" data-scroll-target="#a.iv.-optional-youtube-comments-on-the-busan-meeting">2a.iv. Optional: YouTube comments on the Busan meeting</a></li>
+  </ul></li>
+  <li><a href="#b.-us-presidential-inaugural-addresses-since-1945" id="toc-b.-us-presidential-inaugural-addresses-since-1945" class="nav-link" data-scroll-target="#b.-us-presidential-inaugural-addresses-since-1945">2b. US presidential inaugural addresses since 1945</a>
+  <ul class="collapse">
+  <li><a href="#b.i.-similarities-and-differences" id="toc-b.i.-similarities-and-differences" class="nav-link" data-scroll-target="#b.i.-similarities-and-differences">2b.i. Similarities and differences</a></li>
+  <li><a href="#b.ii.-is-the-2025-address-in-the-corpus" id="toc-b.ii.-is-the-2025-address-in-the-corpus" class="nav-link" data-scroll-target="#b.ii.-is-the-2025-address-in-the-corpus">2b.ii. Is the 2025 address in the corpus?</a></li>
+  </ul></li>
+  <li><a href="#wordfish" id="toc-wordfish" class="nav-link" data-scroll-target="#wordfish">3. Wordfish</a></li>
+  <li><a href="#report" id="toc-report" class="nav-link" data-scroll-target="#report">4. Report</a></li>
+  <li><a href="#data-note-the-cpd-collection" id="toc-data-note-the-cpd-collection" class="nav-link" data-scroll-target="#data-note-the-cpd-collection">Data note: the CPD collection</a></li>
+  <li><a href="#files" id="toc-files" class="nav-link" data-scroll-target="#files">Files</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Assignment 6: Text analytics with quanteda</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This page reads three corpora with <code>quanteda</code>: archived tweets from the November 2021 Biden–Xi summit, presidential documents I collected from the <em>Compilation of Presidential Documents</em> (CPD) on GovInfo, and the inaugural addresses since 1945. It also has YouTube comments on the October 2025 Trump–Xi meeting in Busan. Answers are labeled with the question numbers from the assignment.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quanteda)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quanteda.textstats)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quanteda.textplots)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quanteda.textmodels)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(httr2)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rvest)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>cpd_dir <span class="ot">&lt;-</span> <span class="st">"data/cpd"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>htm_dir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(cpd_dir, <span class="st">"htm"</span>)   <span class="co"># listed in .gitignore</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>yt_dir  <span class="ot">&lt;-</span> <span class="st">"data/youtube"</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>tw_dir  <span class="ot">&lt;-</span> <span class="st">"data/summit"</span>               <span class="co"># listed in .gitignore</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">walk</span>(<span class="fu">c</span>(htm_dir, yt_dir, tw_dir), dir.create, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># save each API response once, then read the saved copy</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>cached <span class="ot">&lt;-</span> <span class="cf">function</span>(path, f) {</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(path)) <span class="fu">saveRDS</span>(<span class="fu">f</span>(), path)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">readRDS</span>(path)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>now_central <span class="ot">&lt;-</span> <span class="cf">function</span>() <span class="fu">format</span>(<span class="fu">Sys.time</span>(), <span class="st">"%Y-%m-%d %H:%M:%S %Z"</span>, <span class="at">tz =</span> <span class="st">"America/Chicago"</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>pct <span class="ot">&lt;-</span> \(x) scales<span class="sc">::</span><span class="fu">percent</span>(x, <span class="at">accuracy =</span> <span class="dv">1</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>num <span class="ot">&lt;-</span> \(x) <span class="fu">format</span>(x, <span class="at">big.mark =</span> <span class="st">","</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># keyness plot with room for the longest labels</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>plot_keyness <span class="ot">&lt;-</span> <span class="cf">function</span>(key, <span class="at">n =</span> <span class="dv">20</span>) <span class="fu">textplot_keyness</span>(key, <span class="at">n =</span> n, <span class="at">labelsize =</span> <span class="fl">3.5</span>, <span class="at">margin =</span> <span class="fl">0.2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="set-up-and-1.-read" class="level2">
+<h2 class="anchored" data-anchor-id="set-up-and-1.-read">0. Set up and 1. Read</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pkgs <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"quanteda"</span>, <span class="st">"quanteda.textstats"</span>, <span class="st">"quanteda.textplots"</span>, <span class="st">"quanteda.textmodels"</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">"tidyverse"</span>, <span class="st">"sentimentr"</span>, <span class="st">"syuzhet"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">package =</span> pkgs, <span class="at">version =</span> <span class="fu">map_chr</span>(pkgs, \(p) <span class="fu">as.character</span>(<span class="fu">packageVersion</span>(p)))) <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">package</th>
+<th style="text-align: left;">version</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">quanteda</td>
+<td style="text-align: left;">4.5.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">quanteda.textstats</td>
+<td style="text-align: left;">0.97.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">quanteda.textplots</td>
+<td style="text-align: left;">0.96.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">quanteda.textmodels</td>
+<td style="text-align: left;">0.9.10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tidyverse</td>
+<td style="text-align: left;">2.0.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sentimentr</td>
+<td style="text-align: left;">2.9.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">syuzhet</td>
+<td style="text-align: left;">1.0.7</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>My copy of <code>quanteda_textanalytics01.R</code> from Teams covers Part 1: the summit tweets, LSA, the hashtag and mention networks, and sentiment with <code>sentimentr</code> and <code>syuzhet</code>. It has no code for Parts 2 and 3, so I wrote those from the assignment and the <a href="https://tutorials.quanteda.io">quanteda tutorials</a>: basic operations and <code>kwic()</code> (ch.&nbsp;3), frequency, lexical diversity, keyness and similarity (ch.&nbsp;4), and Wordfish (ch.&nbsp;6, “Scaling and classification”). The GovInfo key from Assignment 5 and a YouTube Data API key are in <code>~/.Renviron</code> and are read with <code>Sys.getenv()</code>. Both are sent in request headers, so they are not on this page, in the logs or in the repository.</p>
+</section>
+<section id="a.-one-summit-two-kinds-of-text" class="level2">
+<h2 class="anchored" data-anchor-id="a.-one-summit-two-kinds-of-text">2a. One summit, two kinds of text</h2>
+<section id="a.i.-the-public-summit-tweets" class="level3">
+<h3 class="anchored" data-anchor-id="a.i.-the-public-summit-tweets">2a.i. The public: summit tweets</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>summit <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="fu">file.path</span>(tw_dir, <span class="st">"summit.rds"</span>), \(x) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_csv</span>(<span class="st">"https://raw.githubusercontent.com/datageneration/datamethods/master/textanalytics/summit_11162021.csv"</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(status_id, created_at, text, is_retweet, lang)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">|&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">text =</span> <span class="fu">str_replace_all</span>(text, <span class="st">"&amp;amp;"</span>, <span class="st">"&amp;"</span>))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>low <span class="ot">&lt;-</span> <span class="fu">str_to_lower</span>(summit<span class="sc">$</span>text)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>tw <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">n =</span> <span class="fu">nrow</span>(summit), <span class="at">first =</span> <span class="fu">min</span>(summit<span class="sc">$</span>created_at), <span class="at">last =</span> <span class="fu">max</span>(summit<span class="sc">$</span>created_at),</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">retweets =</span> <span class="fu">mean</span>(summit<span class="sc">$</span>is_retweet), <span class="at">english =</span> <span class="fu">mean</span>(summit<span class="sc">$</span>lang <span class="sc">==</span> <span class="st">"en"</span>),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>           <span class="at">xi =</span> <span class="fu">mean</span>(<span class="fu">str_detect</span>(low, <span class="st">"</span><span class="sc">\\</span><span class="st">bxi</span><span class="sc">\\</span><span class="st">b"</span>)), <span class="at">biden =</span> <span class="fu">mean</span>(<span class="fu">str_detect</span>(low, <span class="st">"biden"</span>)),</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">old_friend =</span> <span class="fu">sum</span>(<span class="fu">str_detect</span>(low, <span class="st">"old friend"</span>)), <span class="at">guardrails =</span> <span class="fu">sum</span>(<span class="fu">str_detect</span>(low, <span class="st">"guardrail"</span>)),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>           <span class="at">rules =</span> <span class="fu">sum</span>(<span class="fu">str_detect</span>(low, <span class="st">"rules of the road"</span>)))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>sum_twt <span class="ot">&lt;-</span> summit<span class="sc">$</span>text</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>The dataset has 14,520 tweets from November 7 to November 16, 2021 (UTC). 62% are retweets and 93% are in English. The file does not record the search query, but 88% of the tweets contain “Biden” and 85% contain “Xi”. It was collected with the Twitter API, which no longer offers this access, so it cannot be collected again.</p>
+<p><strong>Frequent words.</strong> Stopwords, URLs, hashtags and mentions are removed here; they get their own networks below.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tw_words <span class="ot">&lt;-</span> <span class="fu">tokens</span>(sum_twt, <span class="at">remove_punct =</span> <span class="cn">TRUE</span>, <span class="at">remove_url =</span> <span class="cn">TRUE</span>, <span class="at">remove_symbols =</span> <span class="cn">TRUE</span>, <span class="at">remove_numbers =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_remove</span>(<span class="fu">c</span>(<span class="fu">stopwords</span>(<span class="st">"en"</span>), <span class="st">"amp"</span>, <span class="st">"rt"</span>, <span class="st">"#*"</span>, <span class="st">"@*"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dfm</span>()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">textstat_frequency</span>(tw_words, <span class="at">n =</span> <span class="dv">25</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(feature, frequency), <span class="at">y =</span> frequency)) <span class="sc">+</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>, <span class="at">title =</span> <span class="st">"Most frequent words in the summit tweets"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The retweets repeat a few texts many times. These are the three most repeated:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>summit <span class="sc">|&gt;</span> <span class="fu">count</span>(text, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">text =</span> <span class="fu">str_trunc</span>(text, <span class="dv">120</span>)) <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 96%">
+<col style="width: 3%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">text</th>
+<th style="text-align: right;">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">#JoeBiden exchanged pleasantries with #XiJinping during the “virtual summit” when #Biden should have told Xi that #Am…</td>
+<td style="text-align: right;">295</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Why did Joe Biden refuse to call out China for unleashing Covid-19 into the world during his summit with Xi Jinping?</td>
+<td style="text-align: right;">273</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Biden and Xi kicked off their virtual summit. <span class="citation" data-cites="POTUS">@POTUS</span> told Xi: “All countries have to play by the same rules of the ro…</td>
+<td style="text-align: right;">245</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><strong>Hashtag network.</strong> The code is from the class script.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>tweet_dfm <span class="ot">&lt;-</span> <span class="fu">tokens</span>(sum_twt, <span class="at">remove_punct =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> <span class="fu">dfm</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>tag_dfm <span class="ot">&lt;-</span> <span class="fu">dfm_select</span>(tweet_dfm, <span class="at">pattern =</span> <span class="st">"#*"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>toptag  <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">topfeatures</span>(tag_dfm, <span class="dv">50</span>))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(toptag, <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "#china"       "#biden"       "#xijinping"   "#joebiden"    "#america"    
+ [6] "#americans"   "#coronavirus" "#fentanyl"    "#xi"          "#us"         </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tag_fcm <span class="ot">&lt;-</span> <span class="fu">fcm</span>(tag_dfm)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>topgat_fcm <span class="ot">&lt;-</span> <span class="fu">fcm_select</span>(tag_fcm, <span class="at">pattern =</span> toptag)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">textplot_network</span>(topgat_fcm, <span class="at">min_freq =</span> <span class="dv">50</span>, <span class="at">edge_alpha =</span> <span class="fl">0.8</span>, <span class="at">edge_size =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Mention network.</strong></p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>user_dfm <span class="ot">&lt;-</span> <span class="fu">dfm_select</span>(tweet_dfm, <span class="at">pattern =</span> <span class="st">"@*"</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>topuser  <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">topfeatures</span>(user_dfm, <span class="dv">50</span>))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(topuser, <span class="dv">20</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "@potus"           "@politico"        "@joebiden"        "@jendeben"       
+ [5] "@eneskanter"      "@nwadhams"        "@phelimkine"      "@nahaltoosi"     
+ [9] "@nba"             "@washwizards"     "@pelicansnba"     "@capitalonearena"
+[13] "@kevinliptakcnn"  "@foxbusiness"     "@morningsmaria"   "@scmpnews"       
+[17] "@petermartin_pcm" "@nytimes"         "@uyghur_american" "@kaylatausche"   </code></pre>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>user_fcm <span class="ot">&lt;-</span> <span class="fu">fcm</span>(user_dfm)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>user_fcm <span class="ot">&lt;-</span> <span class="fu">fcm_select</span>(user_fcm, <span class="at">pattern =</span> topuser)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">textplot_network</span>(user_fcm, <span class="at">min_freq =</span> <span class="dv">20</span>, <span class="at">edge_color =</span> <span class="st">"firebrick"</span>, <span class="at">edge_alpha =</span> <span class="fl">0.8</span>, <span class="at">edge_size =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The hashtags link the summit to other topics: <code>#coronavirus</code> and <code>#fentanyl</code> in the main cluster, a separate cluster on <code>#uyghurs</code>, <code>#tibetans</code> and <code>#humanrights</code>, and <code>#taiwan</code>. The most mentioned accounts are <code>@potus</code> and <code>@joebiden</code>, then news accounts and reporters. In the network, the accounts that appear together form small clusters: reporters around <code>@politico</code>, and <code>@eneskanter</code> with NBA accounts. Those last tweets are about Uyghur and Tibetan activists at a Wizards game and the NBA player Enes Kanter, urging Biden to raise human rights with Xi at the summit.</p>
+<p><strong>LSA.</strong> The script keeps four dimensions (<code>nd = 4</code>). I ran it on the cleaned word matrix, keeping words that appear in at least 5 tweets. These are the words with the largest loadings on each dimension:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>lsa_dfm <span class="ot">&lt;-</span> <span class="fu">dfm_trim</span>(tw_words, <span class="at">min_docfreq =</span> <span class="dv">5</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>sum_lsa <span class="ot">&lt;-</span> <span class="fu">textmodel_lsa</span>(lsa_dfm, <span class="at">nd =</span> <span class="dv">4</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tibble</span>(sum_lsa<span class="sc">$</span>features, <span class="at">rownames =</span> <span class="st">"feature"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>feature, <span class="at">names_to =</span> <span class="st">"dimension"</span>, <span class="at">values_to =</span> <span class="st">"loading"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(dimension) <span class="sc">|&gt;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="fu">abs</span>(loading), <span class="at">n =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">top_words =</span> <span class="fu">paste</span>(feature, <span class="at">collapse =</span> <span class="st">", "</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 89%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">dimension</th>
+<th style="text-align: left;">top_words</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">V1</td>
+<td style="text-align: left;">biden, xi, summit, virtual, president, jinping, chinese, joe, monday, hold</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">V2</td>
+<td style="text-align: left;">president, biden, jinping, xi, chinese, virtual, monday, know, russia, ukraine</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">V3</td>
+<td style="text-align: left;">president, summit, virtual, biden, biden-xi, jinping, said, chinese, know, russia</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">V4</td>
+<td style="text-align: left;">said, old, friend, know, russia, ukraine, summit, xi, china, candid</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The first dimension is the summit itself (biden, xi, summit, virtual), so it mostly shows how many of the common words a tweet has. The others add quotes from the meeting (“said”, “old friend”, “candid”) and “russia” and “ukraine”. Since most tweets are retweets, a few repeated texts can shape these dimensions.</p>
+<p><strong>Sentiment</strong> (from the class script):</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sentimentr)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(syuzhet)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>sentiment_scores <span class="ot">&lt;-</span> <span class="fu">sentiment</span>(sum_twt)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>agg_sentiment <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(sentiment_scores<span class="sc">$</span>sentiment, <span class="at">by =</span> <span class="fu">list</span>(sentiment_scores<span class="sc">$</span>element_id), <span class="at">FUN =</span> mean)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(agg_sentiment) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"tweet_id"</span>, <span class="st">"avg_sentiment"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>sentiment_comparison <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">syuzhet =</span> <span class="fu">get_sentiment</span>(sum_twt, <span class="at">method =</span> <span class="st">"syuzhet"</span>),</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">bing    =</span> <span class="fu">get_sentiment</span>(sum_twt, <span class="at">method =</span> <span class="st">"bing"</span>),</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">afinn   =</span> <span class="fu">get_sentiment</span>(sum_twt, <span class="at">method =</span> <span class="st">"afinn"</span>),</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrc     =</span> <span class="fu">get_sentiment</span>(sum_twt, <span class="at">method =</span> <span class="st">"nrc"</span>)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>sentiment_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(sentiment_comparison)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(sentiment_melted, <span class="fu">aes</span>(<span class="at">x =</span> variable, <span class="at">y =</span> value, <span class="at">fill =</span> variable)) <span class="sc">+</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Sentiment Score Comparison Across Methods"</span>, <span class="at">x =</span> <span class="st">"Sentiment Method"</span>, <span class="at">y =</span> <span class="st">"Sentiment Score"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cor</span>(sentiment_comparison), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>        syuzhet bing afinn  nrc
+syuzhet    1.00 0.74  0.69 0.72
+bing       0.74 1.00  0.60 0.49
+afinn      0.69 0.60  1.00 0.46
+nrc        0.72 0.49  0.46 1.00</code></pre>
+</div>
+</div>
+<p>The average <code>sentimentr</code> score per tweet is -0.002, about neutral. The four lexicons agree only partly (correlations from 0.46 to 0.74), and they score single words, not what a tweet means. So I would not read much into the level.</p>
+</section>
+<section id="a.ii.-the-government-compilation-of-presidential-documents" class="level3">
+<h3 class="anchored" data-anchor-id="a.ii.-the-government-compilation-of-presidential-documents">2a.ii. The government: Compilation of Presidential Documents</h3>
+<p>The CPD is the official record of the President’s public remarks, statements and orders, compiled by the Office of the Federal Register (OFR). I searched the CPD collection through the GovInfo API, paged through every result, took each package’s summary for metadata, and downloaded each document’s text from <code>/packages/{packageId}/htm</code>. The functions are the ones from Assignment 5. <code>govtdata01.R</code> only downloads from an exported list, so in Assignment 5 I wrote the API search and download with <code>httr2</code>. Here I reuse them and log each file.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># every GovInfo call goes through this; the key comes from .Renviron and goes in a header</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>govinfo <span class="ot">&lt;-</span> <span class="cf">function</span>(path) {</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">request</span>(<span class="st">"https://api.govinfo.gov"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_url_path_append</span>(path) <span class="sc">|&gt;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_headers</span>(<span class="st">`</span><span class="at">X-Api-Key</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">Sys.getenv</span>(<span class="st">"GOVINFO_API_KEY"</span>), <span class="at">.redact =</span> <span class="st">"X-Api-Key"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_retry</span>(<span class="at">max_tries =</span> <span class="dv">3</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>cpd_query <span class="ot">&lt;-</span> <span class="st">'collection:(CPD) AND "Xi Jinping" AND publishdate:range(2021-01-20,)'</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>search_page <span class="ot">&lt;-</span> <span class="cf">function</span>(query, <span class="at">offset_mark =</span> <span class="st">"*"</span>) {</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">govinfo</span>(<span class="st">"search"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_body_json</span>(<span class="fu">list</span>(<span class="at">query =</span> query, <span class="at">pageSize =</span> <span class="dv">100</span>, <span class="at">offsetMark =</span> offset_mark,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>                       <span class="at">sorts =</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="at">field =</span> <span class="st">"publishdate"</span>, <span class="at">sortOrder =</span> <span class="st">"DESC"</span>)))) <span class="sc">|&gt;</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_perform</span>() <span class="sc">|&gt;</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">resp_body_json</span>()</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>search_all <span class="ot">&lt;-</span> <span class="cf">function</span>(query) {</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>  out  <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  mark <span class="ot">&lt;-</span> <span class="st">"*"</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">repeat</span> {</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>    page <span class="ot">&lt;-</span> <span class="fu">search_page</span>(query, mark)</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">length</span>(page<span class="sc">$</span>results) <span class="sc">==</span> <span class="dv">0</span>) <span class="cf">break</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>    out  <span class="ot">&lt;-</span> <span class="fu">c</span>(out, page<span class="sc">$</span>results)</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>    mark <span class="ot">&lt;-</span> page<span class="sc">$</span>offsetMark</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.null</span>(mark)) <span class="cf">break</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">map</span>(out, \(r) r[<span class="fu">c</span>(<span class="st">"packageId"</span>, <span class="st">"title"</span>, <span class="st">"dateIssued"</span>, <span class="st">"lastModified"</span>)]))</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>cpd_found <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="fu">file.path</span>(cpd_dir, <span class="st">"cpd_search.rds"</span>), \(x) {</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">searched =</span> <span class="fu">now_central</span>(), <span class="at">results =</span> <span class="fu">search_all</span>(cpd_query))</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>ids <span class="ot">&lt;-</span> <span class="fu">unique</span>(cpd_found<span class="sc">$</span>results<span class="sc">$</span>packageId)</span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">results =</span> <span class="fu">nrow</span>(cpd_found<span class="sc">$</span>results), <span class="at">distinct =</span> <span class="fu">length</span>(ids))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> results distinct 
+     344      344 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>summaries <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="fu">file.path</span>(cpd_dir, <span class="st">"cpd_summaries.rds"</span>), \(x) {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(ids, \(id) {</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="fu">runif</span>(<span class="dv">1</span>, <span class="fl">0.5</span>, <span class="fl">1.5</span>))</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">govinfo</span>(<span class="fu">paste0</span>(<span class="st">"packages/"</span>, id, <span class="st">"/summary"</span>)) <span class="sc">|&gt;</span> <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> <span class="fu">resp_body_json</span>()</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">|&gt;</span> <span class="fu">set_names</span>(ids)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>log_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(cpd_dir, <span class="st">"download_log.csv"</span>)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>done <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">file.exists</span>(log_file)) <span class="fu">read_csv</span>(log_file, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)<span class="sc">$</span>packageId <span class="cf">else</span> <span class="fu">character</span>()</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co"># one file at a time, one log row per file, so an interrupted run picks up where it stopped</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (id <span class="cf">in</span> <span class="fu">setdiff</span>(ids, done)) {</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  dest <span class="ot">&lt;-</span> <span class="fu">file.path</span>(htm_dir, <span class="fu">paste0</span>(id, <span class="st">".htm"</span>))</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  resp <span class="ot">&lt;-</span> <span class="fu">govinfo</span>(<span class="fu">paste0</span>(<span class="st">"packages/"</span>, id, <span class="st">"/htm"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_error</span>(<span class="at">is_error =</span> \(r) <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_perform</span>(<span class="at">path =</span> dest)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">packageId =</span> id, <span class="at">url =</span> <span class="fu">paste0</span>(<span class="st">"https://api.govinfo.gov/packages/"</span>, id, <span class="st">"/htm"</span>),</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">status =</span> <span class="fu">resp_status</span>(resp), <span class="at">bytes =</span> <span class="fu">file.size</span>(dest),</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>         <span class="at">md5 =</span> <span class="fu">unname</span>(tools<span class="sc">::</span><span class="fu">md5sum</span>(dest)), <span class="at">finished =</span> <span class="fu">now_central</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">write_csv</span>(log_file, <span class="at">append =</span> <span class="fu">file.exists</span>(log_file))</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Sys.sleep</span>(<span class="fu">runif</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>dl_log <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(log_file, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a><span class="fu">count</span>(dl_log, status)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  status     n
+   &lt;dbl&gt; &lt;int&gt;
+1    200   344</code></pre>
+</div>
+</div>
+<p>A CPD document is not all the President’s words. Transcripts label each turn (“The President.”, “Q.” for a reporter, “Secretary Rubio.”, “President Xi.”). The OFR editors add subject headings inside transcripts (“China-U.S. Trade”), bracketed notes (“[Laughter]”), and at the end a note, categories, and an index of the names mentioned. So I split each document into the president’s words, other speakers, and the editors’ text. The speaker labels are found with a regular expression. It is a heuristic: a few paragraphs that start with a name, like a list of companies, are taken as another speaker.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># transcripts label each turn ("The President.", "Q.", "Secretary Rubio."); a paragraph</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># without a label continues the last speaker, and an unlabeled document is all the president's</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>president_re <span class="ot">&lt;-</span> <span class="st">"^(The President|President Biden|President Trump)</span><span class="sc">\\</span><span class="st">. "</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>reporter_re  <span class="ot">&lt;-</span> <span class="st">"^Q</span><span class="sc">\\</span><span class="st">. "</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>word_re      <span class="ot">&lt;-</span> <span class="st">"(?:(?:Mr|Mrs|Ms|Dr|Lt|Col|Capt|Maj|Gen|Sen|Rep|Gov|Comd|U</span><span class="sc">\\</span><span class="st">.S)</span><span class="sc">\\</span><span class="st">.|[A-Z][A-Za-z'’-]*|of|de|da|la|bin)"</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>other_re     <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"^(?!(?:And|But|So|Alright|Okay|Well|Yes|No|Now|Oh|On|Go|Happy|That.s|Thank|Thanks|Good|Great|Right)</span><span class="sc">\\</span><span class="st">b)"</span>,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"(?:"</span>, word_re, <span class="st">" ){1,5}[A-Z][A-Za-z'’-]+</span><span class="sc">\\</span><span class="st">. "</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>label_turns <span class="ot">&lt;-</span> <span class="cf">function</span>(paras) {</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># a few paragraphs hold more than one turn</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  paras <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">str_split</span>(paras, <span class="st">"</span><span class="sc">\\</span><span class="st">s(?=(?:Q|The President|President Biden|President Trump)</span><span class="sc">\\</span><span class="st">. )"</span>))</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># the editors add subject headings ("China-U.S. Trade") and bracketed notes ("[Laughter]")</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  heading <span class="ot">&lt;-</span> <span class="fu">nchar</span>(paras) <span class="sc">&lt;</span> <span class="dv">120</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">str_detect</span>(paras, <span class="st">"[.?!:;,—–</span><span class="sc">\"</span><span class="st">”’)…</span><span class="sc">\\</span><span class="st">]]$"</span>)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  bracket <span class="ot">&lt;-</span> <span class="fu">str_extract_all</span>(paras, <span class="st">"</span><span class="sc">\\</span><span class="st">[[^</span><span class="sc">\\</span><span class="st">]]*</span><span class="sc">\\</span><span class="st">]"</span>) <span class="sc">|&gt;</span> <span class="fu">map_chr</span>(\(x) <span class="fu">paste</span>(x, <span class="at">collapse =</span> <span class="st">" "</span>))</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  text    <span class="ot">&lt;-</span> <span class="fu">str_squish</span>(<span class="fu">str_remove_all</span>(paras, <span class="st">"</span><span class="sc">\\</span><span class="st">[[^</span><span class="sc">\\</span><span class="st">]]*</span><span class="sc">\\</span><span class="st">]"</span>))</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  speaker <span class="ot">&lt;-</span> <span class="fu">case_when</span>(heading <span class="sc">~</span> <span class="st">"heading"</span>,</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">str_detect</span>(text, president_re) <span class="sc">~</span> <span class="st">"president"</span>,</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">str_detect</span>(text, reporter_re)  <span class="sc">~</span> <span class="st">"reporter"</span>,</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">str_detect</span>(text, other_re)     <span class="sc">~</span> <span class="st">"other"</span>,</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>                       <span class="at">.default =</span> <span class="cn">NA_character_</span>)</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  last <span class="ot">&lt;-</span> <span class="st">"president"</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(speaker)) {</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.na</span>(speaker[i])) speaker[i] <span class="ot">&lt;-</span> last</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (speaker[i] <span class="sc">!=</span> <span class="st">"heading"</span>) last <span class="ot">&lt;-</span> speaker[i]</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(speaker, <span class="at">text =</span> <span class="fu">if_else</span>(heading, paras, <span class="fu">str_remove</span>(text, president_re)), bracket)</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a><span class="co"># split each document into the president's words, other speakers, and what the OFR editors added</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>split_cpd <span class="ot">&lt;-</span> <span class="cf">function</span>(file) {</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>  paras <span class="ot">&lt;-</span> <span class="fu">read_html</span>(file) <span class="sc">|&gt;</span> <span class="fu">html_elements</span>(<span class="st">"p, h1"</span>) <span class="sc">|&gt;</span> <span class="fu">html_text2</span>() <span class="sc">|&gt;</span> <span class="fu">str_squish</span>()</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>  paras <span class="ot">&lt;-</span> paras[paras <span class="sc">!=</span> <span class="st">""</span>]</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>  end   <span class="ot">&lt;-</span> <span class="fu">detect_index</span>(paras, \(p) <span class="fu">str_detect</span>(p, <span class="st">"^(</span><span class="sc">\\</span><span class="st">[Filed|NOTE:|Categories:|Names:|Subjects:|DCPD Number:)"</span>))</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (end <span class="sc">==</span> <span class="dv">0</span>) end <span class="ot">&lt;-</span> <span class="fu">length</span>(paras) <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># administration line, title, and the date line when there is one</span></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>  n_head <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">str_detect</span>(paras[<span class="dv">3</span>], <span class="fu">paste0</span>(<span class="st">"^("</span>, <span class="fu">paste</span>(month.name, <span class="at">collapse =</span> <span class="st">"|"</span>), <span class="st">") </span><span class="sc">\\</span><span class="st">d"</span>))) <span class="dv">3</span> <span class="cf">else</span> <span class="dv">2</span></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>  turns  <span class="ot">&lt;-</span> <span class="fu">label_turns</span>(paras[<span class="fu">seq_len</span>(end <span class="sc">-</span> <span class="dv">1</span>)][<span class="sc">-</span><span class="fu">seq_len</span>(n_head)])</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>  join   <span class="ot">&lt;-</span> \(x) <span class="fu">paste</span>(x[x <span class="sc">!=</span> <span class="st">""</span>], <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">header          =</span> <span class="fu">paste</span>(<span class="fu">head</span>(paras, n_head), <span class="at">collapse =</span> <span class="st">" | "</span>),</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>         <span class="at">president_words =</span> <span class="fu">join</span>(turns<span class="sc">$</span>text[turns<span class="sc">$</span>speaker <span class="sc">==</span> <span class="st">"president"</span>]),</span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>         <span class="at">others          =</span> <span class="fu">join</span>(turns<span class="sc">$</span>text[turns<span class="sc">$</span>speaker <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"reporter"</span>, <span class="st">"other"</span>)]),</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>         <span class="at">editors         =</span> <span class="fu">join</span>(<span class="fu">c</span>(turns<span class="sc">$</span>text[turns<span class="sc">$</span>speaker <span class="sc">==</span> <span class="st">"heading"</span>], turns<span class="sc">$</span>bracket,</span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>                                  paras[<span class="fu">seq_along</span>(paras) <span class="sc">&gt;=</span> end])))</span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">imap</span>(summaries, \(s, id) <span class="fu">tibble</span>(</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">packageId  =</span> id,</span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">dateIssued =</span> s<span class="sc">$</span>dateIssued,</span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">title      =</span> s<span class="sc">$</span>title,</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>  <span class="at">president  =</span> s<span class="sc">$</span>president<span class="sc">$</span>id <span class="sc">%||%</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">category   =</span> s<span class="sc">$</span>dcpdCategory[[<span class="dv">1</span>]]<span class="sc">$</span>level1 <span class="sc">%||%</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>  <span class="at">pages      =</span> <span class="fu">as.integer</span>(s<span class="sc">$</span>pages <span class="sc">%||%</span> <span class="cn">NA</span>)</span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>)) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>()</span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>docs <span class="ot">&lt;-</span> meta <span class="sc">|&gt;</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">map</span>(meta<span class="sc">$</span>packageId, \(id) <span class="fu">split_cpd</span>(<span class="fu">file.path</span>(htm_dir, <span class="fu">paste0</span>(id, <span class="st">".htm"</span>)))) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">admin        =</span> <span class="fu">if_else</span>(president <span class="sc">==</span> <span class="st">"JRB"</span>, <span class="st">"Biden"</span>, <span class="st">"Trump"</span>),</span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>         <span class="at">xi_president =</span> <span class="fu">str_detect</span>(president_words, <span class="st">"</span><span class="sc">\\</span><span class="st">bXi</span><span class="sc">\\</span><span class="st">b"</span>),</span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>         <span class="at">xi_others    =</span> <span class="fu">str_detect</span>(others, <span class="st">"</span><span class="sc">\\</span><span class="st">bXi</span><span class="sc">\\</span><span class="st">b"</span>),</span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>         <span class="at">xi_editors   =</span> <span class="fu">str_detect</span>(editors, <span class="st">"</span><span class="sc">\\</span><span class="st">bXi</span><span class="sc">\\</span><span class="st">b"</span>),</span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>         <span class="at">digest       =</span> <span class="fu">str_detect</span>(packageId, <span class="st">"DIGEST|CHECKLIST"</span>),</span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a>         <span class="at">xi_where     =</span> <span class="fu">case_when</span>(digest <span class="sc">~</span> <span class="st">"annual digest or checklist"</span>,</span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>                                  xi_president <span class="sc">~</span> <span class="st">"the president"</span>,</span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>                                  xi_others <span class="sc">~</span> <span class="st">"only another speaker"</span>,</span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>                                  xi_editors <span class="sc">~</span> <span class="st">"only the editors"</span>,</span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">.default =</span> <span class="st">"nowhere in the text"</span>))</span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a>use <span class="ot">&lt;-</span> docs <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="sc">!</span>digest)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>The search found 344 packages. 9 are annual compilations: the “Digest of Other White House Announcements” and “Checklist of White House Press Releases” for 2021 to 2024, and the 2026 Digest so far. They are lists compiled by the editors and cover a whole year, so I keep them in the manifest but leave them out of the analysis. That leaves 335 documents:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>use <span class="sc">|&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(admin) <span class="sc">|&gt;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">documents =</span> <span class="fu">n</span>(), <span class="at">first =</span> <span class="fu">min</span>(dateIssued), <span class="at">last =</span> <span class="fu">max</span>(dateIssued),</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">`</span><span class="at">president's words</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num</span>(<span class="fu">sum</span>(<span class="fu">str_count</span>(president_words, <span class="st">"</span><span class="sc">\\</span><span class="st">S+"</span>))),</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">`</span><span class="at">other speakers' words</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num</span>(<span class="fu">sum</span>(<span class="fu">str_count</span>(others, <span class="st">"</span><span class="sc">\\</span><span class="st">S+"</span>)))) <span class="sc">|&gt;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 12%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 23%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">admin</th>
+<th style="text-align: right;">documents</th>
+<th style="text-align: left;">first</th>
+<th style="text-align: left;">last</th>
+<th style="text-align: left;">president’s words</th>
+<th style="text-align: left;">other speakers’ words</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Biden</td>
+<td style="text-align: right;">175</td>
+<td style="text-align: left;">2021-03-17</td>
+<td style="text-align: left;">2025-01-17</td>
+<td style="text-align: left;">488,544</td>
+<td style="text-align: left;">56,941</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Trump</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: left;">2025-01-20</td>
+<td style="text-align: left;">2026-09-12</td>
+<td style="text-align: left;">787,645</td>
+<td style="text-align: left;">255,979</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>use <span class="sc">|&gt;</span> <span class="fu">count</span>(category, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">category</th>
+<th style="text-align: right;">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Addresses and Remarks</td>
+<td style="text-align: right;">205</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Interviews With the News Media</td>
+<td style="text-align: right;">102</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Meetings With Foreign Leaders and International Officials</td>
+<td style="text-align: right;">16</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Bill Signings and Vetoes</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Addresses to the Nation</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Statements by the President</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Communications to Federal Agencies</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Executive Orders</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Joint Statements</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Who says “Xi” in each document?</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>docs <span class="sc">|&gt;</span> <span class="fu">count</span>(admin, xi_where) <span class="sc">|&gt;</span> <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> admin, <span class="at">values_from =</span> n, <span class="at">values_fill =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">xi_where</th>
+<th style="text-align: right;">Biden</th>
+<th style="text-align: right;">Trump</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">annual digest or checklist</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">only another speaker</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">21</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">only the editors</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">the president</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: right;">137</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>In 12 documents Xi is named only by the editors, in the index of names or the note at the end (for example, “The memorandum referred to President Xi Jinping of China”). In 41 more, only a reporter or another leader says his name. The search matches the editors’ index as well as the text, so it finds documents where the President never mentions Xi.</p>
+<p><strong>Xi in context.</strong> <code>kwic()</code> on the president’s words, with a window of 7 words. Here are a few lines from each administration:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>cpd_corp <span class="ot">&lt;-</span> <span class="fu">corpus</span>(use, <span class="at">text_field =</span> <span class="st">"president_words"</span>, <span class="at">docid_field =</span> <span class="st">"packageId"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>cpd_toks <span class="ot">&lt;-</span> <span class="fu">tokens</span>(cpd_corp, <span class="at">remove_punct =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>kw <span class="ot">&lt;-</span> <span class="fu">kwic</span>(cpd_toks, <span class="at">pattern =</span> <span class="st">"Xi"</span>, <span class="at">case_insensitive =</span> <span class="cn">FALSE</span>, <span class="at">window =</span> <span class="dv">7</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">6302</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>kw <span class="sc">|&gt;</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(<span class="fu">select</span>(use, <span class="at">docname =</span> packageId, admin, dateIssued), <span class="at">by =</span> <span class="st">"docname"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(admin) <span class="sc">|&gt;</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">6</span>) <span class="sc">|&gt;</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(admin, dateIssued, pre, keyword, post) <span class="sc">|&gt;</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 8%">
+<col style="width: 45%">
+<col style="width: 6%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">admin</th>
+<th style="text-align: left;">dateIssued</th>
+<th style="text-align: left;">pre</th>
+<th style="text-align: left;">keyword</th>
+<th style="text-align: left;">post</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Biden</td>
+<td style="text-align: left;">2024-07-11</td>
+<td style="text-align: left;">new mechanism There’s a direct line between</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">and me and our military has direct</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Biden</td>
+<td style="text-align: left;">2023-11-16</td>
+<td style="text-align: left;">and constructive I again emphasized to President</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">that the United States does not seek</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Biden</td>
+<td style="text-align: left;">2021-10-05</td>
+<td style="text-align: left;">in person Look China has—I’ve spoken with</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">about Taiwan We agree we—we’ll abide by</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Biden</td>
+<td style="text-align: left;">2021-10-21</td>
+<td style="text-align: left;">have spoken and spent more time with</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">Jinping than any other world leader has</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Biden</td>
+<td style="text-align: left;">2021-04-28</td>
+<td style="text-align: left;">China My discussions—in my discussions with President</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">I told him We welcome the competition</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Biden</td>
+<td style="text-align: left;">2024-03-15</td>
+<td style="text-align: left;">and possibilities for everybody—possibilities I was with</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">Jinping a couple of years ago on</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Trump</td>
+<td style="text-align: left;">2025-06-16</td>
+<td style="text-align: left;">think we’ll get it I think President</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">will ultimately approve it Yes Yes sure</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Trump</td>
+<td style="text-align: left;">2025-10-27</td>
+<td style="text-align: left;">we got an original approval from President</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">I expect we’ll have an approval but</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Trump</td>
+<td style="text-align: left;">2025-02-19</td>
+<td style="text-align: left;">a very very good relationship with President</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">I think he’s—I think he’s—I think he’s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Trump</td>
+<td style="text-align: left;">2025-04-07</td>
+<td style="text-align: left;">know hopefully—and I said this to President</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">Hopefully it’s money that we’re never going</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Trump</td>
+<td style="text-align: left;">2025-04-09</td>
+<td style="text-align: left;">No I’m not concerned I think President</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">is a very smart guy and I</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Trump</td>
+<td style="text-align: left;">2026-01-29</td>
+<td style="text-align: left;">That’s—I know China very well I know—President</td>
+<td style="text-align: left;">Xi</td>
+<td style="text-align: left;">is a friend of mine I know</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>naming <span class="ot">&lt;-</span> use <span class="sc">|&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(admin) <span class="sc">|&gt;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="st">`</span><span class="at">"President Xi"</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sum</span>(<span class="fu">str_count</span>(president_words, <span class="st">"President Xi</span><span class="sc">\\</span><span class="st">b"</span>)),</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">`</span><span class="at">"Xi Jinping"</span><span class="st">`</span>   <span class="ot">=</span> <span class="fu">sum</span>(<span class="fu">str_count</span>(president_words, <span class="st">"Xi Jinping"</span>)),</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">`</span><span class="at">all "Xi"</span><span class="st">`</span>       <span class="ot">=</span> <span class="fu">sum</span>(<span class="fu">str_count</span>(president_words, <span class="st">"</span><span class="sc">\\</span><span class="st">bXi</span><span class="sc">\\</span><span class="st">b"</span>)))</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(naming)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">admin</th>
+<th style="text-align: right;">“President Xi”</th>
+<th style="text-align: right;">“Xi Jinping”</th>
+<th style="text-align: right;">all “Xi”</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Biden</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">200</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Trump</td>
+<td style="text-align: right;">235</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">237</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><code>kwic()</code> finds 425 mentions of Xi in the president’s words. The two presidents name him differently. Biden uses the full name “Xi Jinping” in most of his mentions. Trump almost always says “President Xi”.</p>
+<p>The summit is in the CPD as one document, <em>Remarks Prior to a Virtual Meeting With President Xi Jinping of China</em> (November 15, 2021). It has the opening remarks of both leaders. Xi’s remarks are a translation and are labeled “President Xi.”, so my split counts them as another speaker. The talks themselves were closed and are not in the CPD.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>summit_doc <span class="ot">&lt;-</span> <span class="fu">split_cpd</span>(<span class="fu">file.path</span>(htm_dir, <span class="st">"DCPD-202100958.htm"</span>))</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">str_trunc</span>(summit_doc<span class="sc">$</span>president_words, <span class="dv">1500</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Good to see you, Mr. President. Next time, I hope we get to do it face to face like we used to when we traveled through China. We've spent an awful lot—a lot of time talking to one another, and I hope we can have a candid conversation tonight as well.
+Maybe I should start more formally, although you and I have never been that formal with one another.
+Good evening to everyone here in the United States, and good morning to you, Mr.
+President, in Beijing. I'm happy we had found time to meet, and I look forward to a candid and forthright discussion like all the discussions we've had thus far.
+As I've said before, it seems to me our responsibility as leaders of China and the United States is to ensure that the competition between our countries does not veer into conflict, whether intended or unintended. Just simple, straightforward competition.
+It seems to me we need to establish some commonsense guardrails, to be clear and honest where we disagree, and work together where our interests intersect, especially on vital global issues like climate change.
+None of this is a favor to either of our countries—what we do for one another—but it's just responsible world leadership. And you're a major world leader, and so is the United States. How our bilateral relationship evolves, seems to me, will have a profound impact not only on our countries, but quite frankly, the rest of the world.
+We have a responsibility to the world, as well as to our people. It's why we believe—and you and I h...</code></pre>
+</div>
+</div>
+<p><strong>Keyness: Biden and Trump administrations.</strong> Keyness on all of each president’s words in the corpus, with stopwords removed. Trump is the target:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>cpd_dfm <span class="ot">&lt;-</span> cpd_toks <span class="sc">|&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_remove</span>(<span class="fu">stopwords</span>(<span class="st">"en"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_group</span>(<span class="at">groups =</span> admin) <span class="sc">|&gt;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dfm</span>()</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>key_cpd <span class="ot">&lt;-</span> <span class="fu">textstat_keyness</span>(cpd_dfm, <span class="at">target =</span> <span class="st">"Trump"</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_keyness</span>(key_cpd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>And only within 25 words of “Xi”, to see how each talks about him:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>xi_dfm <span class="ot">&lt;-</span> <span class="fu">kwic</span>(cpd_toks, <span class="at">pattern =</span> <span class="st">"Xi"</span>, <span class="at">case_insensitive =</span> <span class="cn">FALSE</span>, <span class="at">window =</span> <span class="dv">25</span>) <span class="sc">|&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(<span class="fu">select</span>(use, <span class="at">docname =</span> packageId, admin), <span class="at">by =</span> <span class="st">"docname"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">text =</span> <span class="fu">paste</span>(pre, post)) <span class="sc">|&gt;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">corpus</span>(<span class="at">text_field =</span> <span class="st">"text"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens</span>(<span class="at">remove_punct =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_remove</span>(<span class="fu">stopwords</span>(<span class="st">"en"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_group</span>(<span class="at">groups =</span> admin) <span class="sc">|&gt;</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dfm</span>()</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>key_xi <span class="ot">&lt;-</span> <span class="fu">textstat_keyness</span>(xi_dfm, <span class="at">target =</span> <span class="st">"Trump"</span>)</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_keyness</span>(key_xi)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Across all documents, Trump’s key words are judgments (“great”, “good”, “bad”, “beautiful”, “tremendous”) and topics of his term (“tariffs”, “Iran”). Biden’s are about domestic policy and values (“folks”, “America”, “nation”, “jobs”, “infrastructure”, “democracy”, “climate”, “pandemic”). Near “Xi”, Biden repeats one story: he has spent more time with Xi than with any other world leader, traveled 17,000 miles with him, and on the Tibetan Plateau Xi asked him to define America, and he said “possibilities”. Trump talks about the relationship (“great”, “good”, “relationship”, “get along”, “respect”, “deal”) and about Xi coming to visit.</p>
+<p>The Busan meeting is in the CPD as three documents:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>use <span class="sc">|&gt;</span> <span class="fu">filter</span>(dateIssued <span class="sc">&gt;=</span> <span class="st">"2025-10-29"</span>, dateIssued <span class="sc">&lt;=</span> <span class="st">"2025-10-31"</span>, <span class="fu">str_detect</span>(title, <span class="st">"Xi"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(packageId, dateIssued, title, category) <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 5%">
+<col style="width: 57%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">packageId</th>
+<th style="text-align: left;">dateIssued</th>
+<th style="text-align: left;">title</th>
+<th style="text-align: left;">category</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DCPD-202501079</td>
+<td style="text-align: left;">2025-10-30</td>
+<td style="text-align: left;">Statement on the President’s Meeting With President Xi Jinping of China in Busan, South Korea</td>
+<td style="text-align: left;">Statements by the President</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DCPD-202501077</td>
+<td style="text-align: left;">2025-10-30</td>
+<td style="text-align: left;">Remarks Prior to a Meeting With President Xi Jinping of China in Busan, South Korea</td>
+<td style="text-align: left;">Meetings With Foreign Leaders and International Officials</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DCPD-202501076</td>
+<td style="text-align: left;">2025-10-30</td>
+<td style="text-align: left;">Remarks During a Greeting With President Xi Jinping of China and an Exchange With Reporters in Busan, South Korea</td>
+<td style="text-align: left;">Interviews With the News Media</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="a.iv.-optional-youtube-comments-on-the-busan-meeting" class="level3">
+<h3 class="anchored" data-anchor-id="a.iv.-optional-youtube-comments-on-the-busan-meeting">2a.iv. Optional: YouTube comments on the Busan meeting</h3>
+<p>I searched YouTube for “Trump Xi Busan”, for videos published from October 29 to November 2, 2025, ordered by relevance, with English as the preferred language. Then I collected the top-level comments from every result that had comments. Replies are not included.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>yt <span class="ot">&lt;-</span> <span class="cf">function</span>(endpoint, ...) {</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">request</span>(<span class="st">"https://www.googleapis.com/youtube/v3"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_url_path_append</span>(endpoint) <span class="sc">|&gt;</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_url_query</span>(...) <span class="sc">|&gt;</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_headers</span>(<span class="st">`</span><span class="at">X-goog-api-key</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">Sys.getenv</span>(<span class="st">"YOUTUBE_API_KEY"</span>), <span class="at">.redact =</span> <span class="st">"X-goog-api-key"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_retry</span>(<span class="at">max_tries =</span> <span class="dv">3</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>yt_query <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">q =</span> <span class="st">"Trump Xi Busan"</span>, <span class="at">type =</span> <span class="st">"video"</span>, <span class="at">order =</span> <span class="st">"relevance"</span>, <span class="at">maxResults =</span> <span class="dv">50</span>,</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>                 <span class="at">publishedAfter =</span> <span class="st">"2025-10-29T00:00:00Z"</span>, <span class="at">publishedBefore =</span> <span class="st">"2025-11-03T00:00:00Z"</span>,</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>                 <span class="at">relevanceLanguage =</span> <span class="st">"en"</span>)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>yt_search <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="fu">file.path</span>(yt_dir, <span class="st">"search.rds"</span>), \(x) {</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">searched =</span> <span class="fu">now_central</span>(),</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">response =</span> <span class="fu">exec</span>(yt, <span class="st">"search"</span>, <span class="at">part =</span> <span class="st">"snippet"</span>, <span class="sc">!!!</span>yt_query) <span class="sc">|&gt;</span> <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> <span class="fu">resp_body_json</span>())</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>video_ids <span class="ot">&lt;-</span> <span class="fu">map_chr</span>(yt_search<span class="sc">$</span>response<span class="sc">$</span>items, \(x) x<span class="sc">$</span>id<span class="sc">$</span>videoId)</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>videos <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="fu">file.path</span>(yt_dir, <span class="st">"videos.rds"</span>), \(x) {</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">yt</span>(<span class="st">"videos"</span>, <span class="at">part =</span> <span class="st">"snippet,statistics,contentDetails"</span>, <span class="at">id =</span> <span class="fu">paste</span>(video_ids, <span class="at">collapse =</span> <span class="st">","</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> <span class="fu">resp_body_json</span>()</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>video_df <span class="ot">&lt;-</span> <span class="fu">map</span>(videos<span class="sc">$</span>items, \(v) <span class="fu">tibble</span>(</span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">rank      =</span> <span class="fu">match</span>(v<span class="sc">$</span>id, video_ids),</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">videoId   =</span> v<span class="sc">$</span>id,</span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">channel   =</span> v<span class="sc">$</span>snippet<span class="sc">$</span>channelTitle,</span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">published =</span> v<span class="sc">$</span>snippet<span class="sc">$</span>publishedAt,</span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">title     =</span> v<span class="sc">$</span>snippet<span class="sc">$</span>title,</span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">duration  =</span> v<span class="sc">$</span>contentDetails<span class="sc">$</span>duration,</span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">views     =</span> <span class="fu">as.integer</span>(v<span class="sc">$</span>statistics<span class="sc">$</span>viewCount <span class="sc">%||%</span> <span class="cn">NA</span>),</span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">comment_count =</span> <span class="fu">as.integer</span>(v<span class="sc">$</span>statistics<span class="sc">$</span>commentCount <span class="sc">%||%</span> <span class="cn">NA</span>)</span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a>)) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span> <span class="fu">arrange</span>(rank)</span>
+<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a>get_comments <span class="ot">&lt;-</span> <span class="cf">function</span>(id) {</span>
+<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a>  out   <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a>  token <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb31-37"><a href="#cb31-37" aria-hidden="true" tabindex="-1"></a>  pages <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb31-38"><a href="#cb31-38" aria-hidden="true" tabindex="-1"></a>  <span class="cf">repeat</span> {</span>
+<span id="cb31-39"><a href="#cb31-39" aria-hidden="true" tabindex="-1"></a>    resp <span class="ot">&lt;-</span> <span class="fu">yt</span>(<span class="st">"commentThreads"</span>, <span class="at">part =</span> <span class="st">"snippet"</span>, <span class="at">videoId =</span> id, <span class="at">maxResults =</span> <span class="dv">100</span>,</span>
+<span id="cb31-40"><a href="#cb31-40" aria-hidden="true" tabindex="-1"></a>               <span class="at">textFormat =</span> <span class="st">"plainText"</span>, <span class="at">pageToken =</span> token) <span class="sc">|&gt;</span></span>
+<span id="cb31-41"><a href="#cb31-41" aria-hidden="true" tabindex="-1"></a>      <span class="fu">req_error</span>(<span class="at">is_error =</span> \(r) <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb31-42"><a href="#cb31-42" aria-hidden="true" tabindex="-1"></a>      <span class="fu">req_perform</span>()</span>
+<span id="cb31-43"><a href="#cb31-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">resp_status</span>(resp) <span class="sc">!=</span> <span class="dv">200</span>) <span class="cf">break</span></span>
+<span id="cb31-44"><a href="#cb31-44" aria-hidden="true" tabindex="-1"></a>    body  <span class="ot">&lt;-</span> <span class="fu">resp_body_json</span>(resp)</span>
+<span id="cb31-45"><a href="#cb31-45" aria-hidden="true" tabindex="-1"></a>    pages <span class="ot">&lt;-</span> pages <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb31-46"><a href="#cb31-46" aria-hidden="true" tabindex="-1"></a>    out   <span class="ot">&lt;-</span> <span class="fu">c</span>(out, body<span class="sc">$</span>items)</span>
+<span id="cb31-47"><a href="#cb31-47" aria-hidden="true" tabindex="-1"></a>    token <span class="ot">&lt;-</span> body<span class="sc">$</span>nextPageToken</span>
+<span id="cb31-48"><a href="#cb31-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.null</span>(token)) <span class="cf">break</span></span>
+<span id="cb31-49"><a href="#cb31-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="fl">0.5</span>)</span>
+<span id="cb31-50"><a href="#cb31-50" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb31-51"><a href="#cb31-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">status =</span> <span class="fu">resp_status</span>(resp), <span class="at">pages =</span> pages,</span>
+<span id="cb31-52"><a href="#cb31-52" aria-hidden="true" tabindex="-1"></a>       <span class="at">comments =</span> <span class="fu">map</span>(out, \(x) {</span>
+<span id="cb31-53"><a href="#cb31-53" aria-hidden="true" tabindex="-1"></a>         s <span class="ot">&lt;-</span> x<span class="sc">$</span>snippet<span class="sc">$</span>topLevelComment<span class="sc">$</span>snippet</span>
+<span id="cb31-54"><a href="#cb31-54" aria-hidden="true" tabindex="-1"></a>         <span class="fu">tibble</span>(<span class="at">videoId =</span> id, <span class="at">commentId =</span> x<span class="sc">$</span>id, <span class="at">published =</span> s<span class="sc">$</span>publishedAt,</span>
+<span id="cb31-55"><a href="#cb31-55" aria-hidden="true" tabindex="-1"></a>                <span class="at">likes =</span> s<span class="sc">$</span>likeCount, <span class="at">replies =</span> x<span class="sc">$</span>snippet<span class="sc">$</span>totalReplyCount, <span class="at">text =</span> s<span class="sc">$</span>textDisplay)</span>
+<span id="cb31-56"><a href="#cb31-56" aria-hidden="true" tabindex="-1"></a>       }) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>())</span>
+<span id="cb31-57"><a href="#cb31-57" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-58"><a href="#cb31-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-59"><a href="#cb31-59" aria-hidden="true" tabindex="-1"></a>yt_log_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(yt_dir, <span class="st">"collection_log.csv"</span>)</span>
+<span id="cb31-60"><a href="#cb31-60" aria-hidden="true" tabindex="-1"></a>comments <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="fu">file.path</span>(yt_dir, <span class="st">"comments.rds"</span>), \(x) {</span>
+<span id="cb31-61"><a href="#cb31-61" aria-hidden="true" tabindex="-1"></a>  with_comments <span class="ot">&lt;-</span> video_df <span class="sc">|&gt;</span> <span class="fu">filter</span>(comment_count <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb31-62"><a href="#cb31-62" aria-hidden="true" tabindex="-1"></a>  got <span class="ot">&lt;-</span> <span class="fu">map</span>(with_comments<span class="sc">$</span>videoId, \(id) {</span>
+<span id="cb31-63"><a href="#cb31-63" aria-hidden="true" tabindex="-1"></a>    res <span class="ot">&lt;-</span> <span class="fu">get_comments</span>(id)</span>
+<span id="cb31-64"><a href="#cb31-64" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span>
+<span id="cb31-65"><a href="#cb31-65" aria-hidden="true" tabindex="-1"></a>    res<span class="sc">$</span>log <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">videoId =</span> id, <span class="at">status =</span> res<span class="sc">$</span>status, <span class="at">pages =</span> res<span class="sc">$</span>pages,</span>
+<span id="cb31-66"><a href="#cb31-66" aria-hidden="true" tabindex="-1"></a>                      <span class="at">comments_collected =</span> <span class="fu">nrow</span>(res<span class="sc">$</span>comments), <span class="at">finished =</span> <span class="fu">now_central</span>())</span>
+<span id="cb31-67"><a href="#cb31-67" aria-hidden="true" tabindex="-1"></a>    res</span>
+<span id="cb31-68"><a href="#cb31-68" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb31-69"><a href="#cb31-69" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(got, <span class="st">"log"</span>) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>() <span class="sc">|&gt;</span> <span class="fu">write_csv</span>(yt_log_file)</span>
+<span id="cb31-70"><a href="#cb31-70" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(got, <span class="st">"comments"</span>) <span class="sc">|&gt;</span> <span class="fu">list_rbind</span>()</span>
+<span id="cb31-71"><a href="#cb31-71" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb31-72"><a href="#cb31-72" aria-hidden="true" tabindex="-1"></a>yt_log <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(yt_log_file, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb31-73"><a href="#cb31-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-74"><a href="#cb31-74" aria-hidden="true" tabindex="-1"></a>video_manifest <span class="ot">&lt;-</span> video_df <span class="sc">|&gt;</span> <span class="fu">left_join</span>(<span class="fu">select</span>(yt_log, videoId, status, comments_collected), <span class="at">by =</span> <span class="st">"videoId"</span>)</span>
+<span id="cb31-75"><a href="#cb31-75" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(video_manifest, <span class="fu">file.path</span>(yt_dir, <span class="st">"video_manifest.csv"</span>))</span>
+<span id="cb31-76"><a href="#cb31-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-77"><a href="#cb31-77" aria-hidden="true" tabindex="-1"></a>video_manifest <span class="sc">|&gt;</span></span>
+<span id="cb31-78"><a href="#cb31-78" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(comments_collected <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb31-79"><a href="#cb31-79" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(comments_collected)) <span class="sc">|&gt;</span></span>
+<span id="cb31-80"><a href="#cb31-80" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb31-81"><a href="#cb31-81" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(channel, <span class="at">title =</span> <span class="fu">str_trunc</span>(title, <span class="dv">60</span>), <span class="at">views =</span> <span class="fu">num</span>(views), comments_collected) <span class="sc">|&gt;</span></span>
+<span id="cb31-82"><a href="#cb31-82" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 58%">
+<col style="width: 7%">
+<col style="width: 18%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">channel</th>
+<th style="text-align: left;">title</th>
+<th style="text-align: left;">views</th>
+<th style="text-align: right;">comments_collected</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DWS News</td>
+<td style="text-align: left;">End of the Summit: President Trump and Xi Jinping Exit Af…</td>
+<td style="text-align: left;">592,469</td>
+<td style="text-align: right;">606</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NBC News</td>
+<td style="text-align: left;">Trump meets with Chinese President Xi Jinping</td>
+<td style="text-align: left;">287,295</td>
+<td style="text-align: right;">200</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CNA</td>
+<td style="text-align: left;">Trump and Xi Jinping conclude talks in Busan, South Korea…</td>
+<td style="text-align: left;">105,344</td>
+<td style="text-align: right;">133</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CNA</td>
+<td style="text-align: left;">Trump, Xi leave Busan after meeting for close to 2 hours</td>
+<td style="text-align: left;">239,516</td>
+<td style="text-align: right;">95</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Associated Press</td>
+<td style="text-align: left;">LIVE: Donald Trump and Xi Jinping’s meeting in Busan, Sou…</td>
+<td style="text-align: left;">121,475</td>
+<td style="text-align: right;">49</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CNA</td>
+<td style="text-align: left;">Presidents Trump and Xi’s opening remarks at Busan, South…</td>
+<td style="text-align: left;">117,008</td>
+<td style="text-align: right;">47</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DWS News</td>
+<td style="text-align: left;">TRUMP’S FULL DEPARTURE: Trump’s Final Walk After Historic…</td>
+<td style="text-align: left;">49,568</td>
+<td style="text-align: right;">30</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DRM News</td>
+<td style="text-align: left;">FULL MEETING: Trump Holds Bilateral Talks With Chinese Pr…</td>
+<td style="text-align: left;">10,454</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">WKYC Channel 3</td>
+<td style="text-align: left;">Trump lands in Busan, South Korea ahead of meeting China’…</td>
+<td style="text-align: left;">34,680</td>
+<td style="text-align: right;">10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Cross World News</td>
+<td style="text-align: left;">Trump and Xi Seal Rare Earth and Tariff Agreement in Busan</td>
+<td style="text-align: left;">1,201</td>
+<td style="text-align: right;">8</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The search on 2026-10-19 returned 32 videos. 26 had comments, and I collected 1,232 top-level comments, all with HTTP 200 (see the <a href="data/youtube/collection_log.csv">collection log</a> and <a href="data/youtube/video_manifest.csv">video manifest</a>). Most come from a few videos: NBC News, DWS News, CNA and the Associated Press. The comments were posted from 2025-10-30 to 2026-10-04, so some came almost a year after the meeting. The comment text stays on my computer and is not posted here.</p>
+<p>To compare with the tweets I use only the original tweets (not retweets), since comments have nothing like retweets.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>tw_orig <span class="ot">&lt;-</span> summit <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="sc">!</span>is_retweet)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>both <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">source =</span> <span class="st">"Tweets 2021"</span>, <span class="at">text =</span> tw_orig<span class="sc">$</span>text),</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">tibble</span>(<span class="at">source =</span> <span class="st">"YouTube 2025"</span>, <span class="at">text =</span> <span class="fu">str_squish</span>(comments<span class="sc">$</span>text)))</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>both_dfm <span class="ot">&lt;-</span> <span class="fu">corpus</span>(both) <span class="sc">|&gt;</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens</span>(<span class="at">remove_punct =</span> <span class="cn">TRUE</span>, <span class="at">remove_url =</span> <span class="cn">TRUE</span>, <span class="at">remove_symbols =</span> <span class="cn">TRUE</span>, <span class="at">remove_numbers =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_tolower</span>() <span class="sc">|&gt;</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_keep</span>(<span class="st">"^[a-z][a-z'’-]+$"</span>, <span class="at">valuetype =</span> <span class="st">"regex"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_remove</span>(<span class="fu">c</span>(<span class="fu">stopwords</span>(<span class="st">"en"</span>), <span class="st">"amp"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_group</span>(<span class="at">groups =</span> source) <span class="sc">|&gt;</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dfm</span>()</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_keyness</span>(<span class="fu">textstat_keyness</span>(both_dfm, <span class="at">target =</span> <span class="st">"YouTube 2025"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>yt_compare <span class="ot">&lt;-</span> both <span class="sc">|&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sentiment =</span> <span class="fu">sentiment_by</span>(text)<span class="sc">$</span>ave_sentiment,</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">hashtag =</span> <span class="fu">str_detect</span>(text, <span class="st">"#</span><span class="sc">\\</span><span class="st">w"</span>), <span class="at">mention =</span> <span class="fu">str_detect</span>(text, <span class="st">"@</span><span class="sc">\\</span><span class="st">w"</span>),</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">chinese =</span> <span class="fu">str_detect</span>(text, <span class="st">"</span><span class="sc">\\</span><span class="st">p{Han}"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(source) <span class="sc">|&gt;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">texts =</span> <span class="fu">n</span>(), <span class="at">mean_sentiment =</span> <span class="fu">round</span>(<span class="fu">mean</span>(sentiment), <span class="dv">3</span>),</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">positive =</span> <span class="fu">pct</span>(<span class="fu">mean</span>(sentiment <span class="sc">&gt;</span> <span class="fl">0.05</span>)), <span class="at">negative =</span> <span class="fu">pct</span>(<span class="fu">mean</span>(sentiment <span class="sc">&lt;</span> <span class="sc">-</span><span class="fl">0.05</span>)),</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">with_hashtag =</span> <span class="fu">pct</span>(<span class="fu">mean</span>(hashtag)), <span class="at">with_mention =</span> <span class="fu">pct</span>(<span class="fu">mean</span>(mention)),</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">chinese_characters =</span> <span class="fu">pct</span>(<span class="fu">mean</span>(chinese)))</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(yt_compare)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 6%">
+<col style="width: 15%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">source</th>
+<th style="text-align: right;">texts</th>
+<th style="text-align: right;">mean_sentiment</th>
+<th style="text-align: left;">positive</th>
+<th style="text-align: left;">negative</th>
+<th style="text-align: left;">with_hashtag</th>
+<th style="text-align: left;">with_mention</th>
+<th style="text-align: left;">chinese_characters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Tweets 2021</td>
+<td style="text-align: right;">5485</td>
+<td style="text-align: right;">0.016</td>
+<td style="text-align: left;">29%</td>
+<td style="text-align: left;">22%</td>
+<td style="text-align: left;">18%</td>
+<td style="text-align: left;">17%</td>
+<td style="text-align: left;">2%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">YouTube 2025</td>
+<td style="text-align: right;">1232</td>
+<td style="text-align: right;">0.049</td>
+<td style="text-align: left;">35%</td>
+<td style="text-align: left;">23%</td>
+<td style="text-align: left;">0%</td>
+<td style="text-align: left;">0%</td>
+<td style="text-align: left;">8%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The tweets are about the summit as an event (“summit”, “virtual”, “Biden”, “Monday”, “tensions”, “Taiwan”). The comments are about Trump himself (“trump”, “maga”, “god bless”, “great”, “peace”) and the deal (“rare earth”, “deal”). The comments are a little more positive on average. Hashtags and mentions are almost absent, so the networks from 2a.i cannot be made from comments, and 8% of the comments contain Chinese characters, which the English lexicons ignore.</p>
+</section>
+</section>
+<section id="b.-us-presidential-inaugural-addresses-since-1945" class="level2">
+<h2 class="anchored" data-anchor-id="b.-us-presidential-inaugural-addresses-since-1945">2b. US presidential inaugural addresses since 1945</h2>
+<section id="b.i.-similarities-and-differences" class="level3">
+<h3 class="anchored" data-anchor-id="b.i.-similarities-and-differences">2b.i. Similarities and differences</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>inaug      <span class="ot">&lt;-</span> <span class="fu">corpus_subset</span>(data_corpus_inaugural, Year <span class="sc">&gt;=</span> <span class="dv">1945</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>inaug_toks <span class="ot">&lt;-</span> <span class="fu">tokens</span>(inaug, <span class="at">remove_punct =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>istats <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">doc =</span> <span class="fu">docnames</span>(inaug), <span class="at">year =</span> inaug<span class="sc">$</span>Year, <span class="at">president =</span> inaug<span class="sc">$</span>President,</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">party =</span> <span class="fu">droplevels</span>(inaug<span class="sc">$</span>Party), <span class="at">tokens =</span> <span class="fu">ntoken</span>(inaug_toks)) <span class="sc">|&gt;</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">textstat_lexdiv</span>(<span class="fu">dfm</span>(inaug_toks), <span class="at">measure =</span> <span class="st">"TTR"</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(TTR)) <span class="sc">|&gt;</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">textstat_lexdiv</span>(inaug_toks, <span class="at">measure =</span> <span class="st">"MATTR"</span>, <span class="at">MATTR_window =</span> <span class="dv">100</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(MATTR)) <span class="sc">|&gt;</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">textstat_readability</span>(inaug, <span class="at">measure =</span> <span class="st">"Flesch.Kincaid"</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(Flesch.Kincaid))</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>istats <span class="sc">|&gt;</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(year, president, party, <span class="at">Length =</span> tokens, <span class="st">`</span><span class="at">Lexical diversity (MATTR)</span><span class="st">`</span> <span class="ot">=</span> MATTR,</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Grade level (Flesch-Kincaid)</span><span class="st">`</span> <span class="ot">=</span> Flesch.Kincaid) <span class="sc">|&gt;</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(Length<span class="sc">:</span><span class="st">`</span><span class="at">Grade level (Flesch-Kincaid)</span><span class="st">`</span>) <span class="sc">|&gt;</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(year, value, <span class="at">color =</span> party, <span class="at">label =</span> president)) <span class="sc">+</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> <span class="dv">1</span>), <span class="at">color =</span> <span class="st">"grey70"</span>) <span class="sc">+</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.8</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> name, <span class="at">ncol =</span> <span class="dv">1</span>, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="fl">0.08</span>, <span class="fl">0.18</span>))) <span class="sc">+</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="at">Democratic =</span> <span class="st">"#2b6cb0"</span>, <span class="at">Republican =</span> <span class="st">"#c53030"</span>)) <span class="sc">+</span></span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">color =</span> <span class="cn">NULL</span>, <span class="at">title =</span> <span class="st">"Inaugural addresses since 1945"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(<span class="fu">select</span>(istats, year, tokens, TTR, MATTR, Flesch.Kincaid)) <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>) <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">tokens</th>
+<th style="text-align: right;">TTR</th>
+<th style="text-align: right;">MATTR</th>
+<th style="text-align: right;">Flesch.Kincaid</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">year</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">-0.24</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">-0.15</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tokens</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">-0.73</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">-0.04</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TTR</td>
+<td style="text-align: right;">-0.24</td>
+<td style="text-align: right;">-0.73</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">0.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MATTR</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.15</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Flesch.Kincaid</td>
+<td style="text-align: right;">-0.15</td>
+<td style="text-align: right;">-0.04</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>I use MATTR (the type-token ratio in moving windows of 100 words) for lexical diversity, because the plain type-token ratio falls as a speech gets longer: its correlation with length is -0.73.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>inaug_dfm <span class="ot">&lt;-</span> inaug_toks <span class="sc">|&gt;</span> <span class="fu">tokens_remove</span>(<span class="fu">stopwords</span>(<span class="st">"en"</span>)) <span class="sc">|&gt;</span> <span class="fu">dfm</span>()</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>sim <span class="ot">&lt;-</span> <span class="fu">textstat_simil</span>(inaug_dfm, <span class="at">method =</span> <span class="st">"cosine"</span>, <span class="at">margin =</span> <span class="st">"documents"</span>) <span class="sc">|&gt;</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tibble</span>(sim, <span class="at">rownames =</span> <span class="st">"a"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>a, <span class="at">names_to =</span> <span class="st">"b"</span>, <span class="at">values_to =</span> <span class="st">"cosine"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cosine =</span> <span class="fu">if_else</span>(a <span class="sc">==</span> b, <span class="cn">NA_real_</span>, cosine),</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">a =</span> <span class="fu">factor</span>(a, <span class="fu">docnames</span>(inaug)), <span class="at">b =</span> <span class="fu">factor</span>(b, <span class="fu">rev</span>(<span class="fu">docnames</span>(inaug)))) <span class="sc">|&gt;</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(a, b, <span class="at">fill =</span> cosine)) <span class="sc">+</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(<span class="at">na.value =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">title =</span> <span class="st">"Cosine similarity of inaugural addresses (stopwords removed)"</span>) <span class="sc">+</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">diag</span>(sim) <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>nearest <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">doc =</span> <span class="fu">rownames</span>(sim), <span class="at">most_similar =</span> <span class="fu">colnames</span>(sim)[<span class="fu">apply</span>(sim, <span class="dv">1</span>, which.max)],</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">cosine =</span> <span class="fu">round</span>(<span class="fu">apply</span>(sim, <span class="dv">1</span>, max, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">2</span>))</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="co"># two Bushes, so match on first name too</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>pres_of   <span class="ot">&lt;-</span> \(d) <span class="fu">with</span>(<span class="fu">docvars</span>(inaug), <span class="fu">paste</span>(FirstName, President))[<span class="fu">match</span>(d, <span class="fu">docnames</span>(inaug))]</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>n_two     <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">duplicated</span>(<span class="fu">pres_of</span>(nearest<span class="sc">$</span>doc)) <span class="sc">|</span> <span class="fu">duplicated</span>(<span class="fu">pres_of</span>(nearest<span class="sc">$</span>doc), <span class="at">fromLast =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>same_pres <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">pres_of</span>(nearest<span class="sc">$</span>doc) <span class="sc">==</span> <span class="fu">pres_of</span>(nearest<span class="sc">$</span>most_similar))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>party_dfm <span class="ot">&lt;-</span> inaug_toks <span class="sc">|&gt;</span> <span class="fu">tokens_remove</span>(<span class="fu">stopwords</span>(<span class="st">"en"</span>)) <span class="sc">|&gt;</span> <span class="fu">tokens_group</span>(<span class="at">groups =</span> Party) <span class="sc">|&gt;</span> <span class="fu">dfm</span>()</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>key_party <span class="ot">&lt;-</span> <span class="fu">textstat_keyness</span>(party_dfm, <span class="at">target =</span> <span class="st">"Republican"</span>)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_keyness</span>(key_party, <span class="at">n =</span> <span class="dv">15</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<ul>
+<li><strong>Length</strong> goes up over time (correlation with year 0.41). The shortest is Roosevelt’s wartime fourth inaugural in 1945 (557 words) and the longest is Trump’s in 2025 (2,913).</li>
+<li><strong>Lexical diversity</strong> (MATTR) rises slightly over time (0.43). The two parties are almost the same (0.685 vs 0.679).</li>
+<li><strong>Readability</strong> has no trend. The Flesch-Kincaid grade goes from 5.8 (Biden 2021, short sentences) to 12.3 (Nixon 1973).</li>
+<li><strong>Cosine similarity</strong>: a speech is most like the same president’s other speech. Of the 14 speeches by presidents who gave two, 11 are closest to that president’s other speech. The most similar pair is Reagan 1981 and 1985 (0.69); the least similar is Roosevelt 1945 and Trump 2025 (0.21).</li>
+<li><strong>Keyness by party</strong> is weak. There are only 11 Republican and 10 Democratic speeches, and the strongest chi-squared values are about 10 to 20. Democrats use “democracy”, “change”, “must”, “generation” and “journey” more. Republicans use “federal”, “government”, “freedom”, “country” and “great” more.</li>
+</ul>
+<p>Overall, the speeches differ more by year and by president than by party.</p>
+</section>
+<section id="b.ii.-is-the-2025-address-in-the-corpus" class="level3">
+<h3 class="anchored" data-anchor-id="b.ii.-is-the-2025-address-in-the-corpus">2b.ii. Is the 2025 address in the corpus?</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(<span class="fu">docvars</span>(data_corpus_inaugural) <span class="sc">|&gt;</span> <span class="fu">select</span>(Year, President, FirstName, Party), <span class="dv">3</span>) <span class="sc">|&gt;</span> <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">Year</th>
+<th style="text-align: left;">President</th>
+<th style="text-align: left;">FirstName</th>
+<th style="text-align: left;">Party</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">58</td>
+<td style="text-align: right;">2017</td>
+<td style="text-align: left;">Trump</td>
+<td style="text-align: left;">Donald J.</td>
+<td style="text-align: left;">Republican</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">59</td>
+<td style="text-align: right;">2021</td>
+<td style="text-align: left;">Biden</td>
+<td style="text-align: left;">Joseph R.</td>
+<td style="text-align: left;">Democratic</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">60</td>
+<td style="text-align: right;">2025</td>
+<td style="text-align: left;">Trump</td>
+<td style="text-align: left;">Donald J.</td>
+<td style="text-align: left;">Republican</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Yes. The latest address in <code>data_corpus_inaugural</code> (quanteda 4.5.0) is Trump’s of January 20, 2025. If it were missing, I would take it from the same source as Part 2: the CPD has it as package <code>DCPD-202500103</code>. I would download the text from the API, keep the president’s words, and add it with <code>corpus()</code> and docvars matching the existing ones (Year, President, FirstName, Party) before combining with <code>c()</code>. As a check, here is the CPD version next to quanteda’s:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>inaug25 <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="fu">file.path</span>(htm_dir, <span class="st">"inaugural_2025.rds"</span>), \(x) {</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  hit <span class="ot">&lt;-</span> <span class="fu">search_page</span>(<span class="st">'collection:(CPD) AND title:("Inaugural Address") AND publishdate:range(2025-01-20,2025-01-31)'</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  id  <span class="ot">&lt;-</span> hit<span class="sc">$</span>results[[<span class="dv">1</span>]]<span class="sc">$</span>packageId</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">packageId =</span> id, <span class="at">title =</span> hit<span class="sc">$</span>results[[<span class="dv">1</span>]]<span class="sc">$</span>title,</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">htm =</span> <span class="fu">govinfo</span>(<span class="fu">paste0</span>(<span class="st">"packages/"</span>, id, <span class="st">"/htm"</span>)) <span class="sc">|&gt;</span> <span class="fu">req_perform</span>() <span class="sc">|&gt;</span> <span class="fu">resp_body_string</span>())</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="at">fileext =</span> <span class="st">".htm"</span>)</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(inaug25<span class="sc">$</span>htm, tmp)</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>cpd25 <span class="ot">&lt;-</span> <span class="fu">split_cpd</span>(tmp)</span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>new_doc <span class="ot">&lt;-</span> <span class="fu">corpus</span>(cpd25<span class="sc">$</span>president_words, <span class="at">docnames =</span> <span class="st">"2025-Trump-CPD"</span>,</span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>                  <span class="at">docvars =</span> <span class="fu">data.frame</span>(<span class="at">Year =</span> <span class="dv">2025</span>L, <span class="at">President =</span> <span class="st">"Trump"</span>, <span class="at">FirstName =</span> <span class="st">"Donald J."</span>, <span class="at">Party =</span> <span class="st">"Republican"</span>))</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">CPD =</span> <span class="fu">ntoken</span>(<span class="fu">tokens</span>(new_doc, <span class="at">remove_punct =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">quanteda =</span> <span class="fu">ntoken</span>(<span class="fu">tokens</span>(data_corpus_inaugural[<span class="st">"2025-Trump"</span>], <span class="at">remove_punct =</span> <span class="cn">TRUE</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> CPD.2025-Trump-CPD quanteda.2025-Trump 
+               2900                2913 </code></pre>
+</div>
+</div>
+<p>The two versions differ by 13 tokens out of about 2,900. The American Presidency Project and the White House website also post the text, but the CPD is the official record and comes with metadata.</p>
+</section>
+</section>
+<section id="wordfish" class="level2">
+<h2 class="anchored" data-anchor-id="wordfish">3. Wordfish</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>wf_dfm <span class="ot">&lt;-</span> <span class="fu">tokens</span>(inaug, <span class="at">remove_punct =</span> <span class="cn">TRUE</span>, <span class="at">remove_numbers =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tokens_remove</span>(<span class="fu">stopwords</span>(<span class="st">"en"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dfm</span>() <span class="sc">|&gt;</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dfm_trim</span>(<span class="at">min_docfreq =</span> <span class="dv">2</span>)</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>wf <span class="ot">&lt;-</span> <span class="fu">textmodel_wordfish</span>(wf_dfm, <span class="at">dir =</span> <span class="fu">c</span>(<span class="fu">which</span>(<span class="fu">docnames</span>(wf_dfm) <span class="sc">==</span> <span class="st">"1949-Truman"</span>),</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>                                         <span class="fu">which</span>(<span class="fu">docnames</span>(wf_dfm) <span class="sc">==</span> <span class="st">"2025-Trump"</span>)))</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="fu">textplot_scale1d</span>(wf, <span class="at">groups =</span> <span class="fu">droplevels</span>(inaug<span class="sc">$</span>Party))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">textplot_scale1d</span>(wf, <span class="at">margin =</span> <span class="st">"features"</span>,</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">highlighted =</span> <span class="fu">c</span>(<span class="st">"peoples"</span>, <span class="st">"resources"</span>, <span class="st">"equality"</span>, <span class="st">"freedom"</span>,</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"thank"</span>, <span class="st">"borders"</span>, <span class="st">"jobs"</span>, <span class="st">"protect"</span>, <span class="st">"everyone"</span>, <span class="st">"democracy"</span>),</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">highlighted_color =</span> <span class="st">"firebrick"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="assign06_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>wf_fit <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">year =</span> inaug<span class="sc">$</span>Year, <span class="at">party =</span> <span class="fu">droplevels</span>(inaug<span class="sc">$</span>Party), <span class="at">theta =</span> wf<span class="sc">$</span>theta)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>wf_lm  <span class="ot">&lt;-</span> <span class="fu">lm</span>(theta <span class="sc">~</span> year <span class="sc">+</span> party, <span class="at">data =</span> wf_fit)</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">summary</span>(wf_lm)<span class="sc">$</span>coefficients, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)      -69.709      9.181  -7.593    0.000
+year               0.035      0.005   7.583    0.000
+partyRepublican    0.057      0.224   0.253    0.803</code></pre>
+</div>
+</div>
+<p>The model uses 21 speeches and 2,093 words (stopwords removed, words in at least two speeches). The estimated positions correlate 0.87 with the year. With the year held constant, party adds almost nothing (0.06, p = 0.8).</p>
+</section>
+<section id="report" class="level2">
+<h2 class="anchored" data-anchor-id="report">4. Report</h2>
+<p><strong>Two kinds of text (2a.iii).</strong> The tweets show what people on Twitter passed around during the summit week, and most of it was the news. 62% are retweets, and many repeat quotes from the opening remarks in the CPD transcript: “old friend” (1,197 tweets), “guardrails” (304), “rules of the road” (277). The hashtags and mentions add what the official text leaves out: COVID, fentanyl, Taiwan, and activists urging Biden to raise the Uyghurs and Tibet. The tweets cannot say what was agreed, and they are not a sample of the public. They were written by accounts that used the collector’s keywords in that window, for their followers.</p>
+<p>The CPD has the President’s public words as spoken. For the summit it has one document, the remarks before the closed talks. Over five years it shows how each White House talked about China. Biden says “Xi Jinping” and retells his personal history with him. Trump says “President Xi” and talks about a great relationship, deals and tariffs. The White House produced these texts for the press and the public record, and the OFR edited them. They show how the presidents presented policy in public. They do not show how it was made. The 2025 YouTube comments were written by viewers of a few news videos, for other viewers, and are more about Trump than about China.</p>
+<p><strong>Data-generating processes.</strong> The tweets were chosen by a keyword and a collection window. So the frequent words and LSA describe what spread among those accounts, mostly retweets of a few posts. The CPD documents were chosen first by the White House (what it released), then by an OFR editor (what goes in, plus headings, notes and an index of names), and then by my query. The query matches that index, so 12 documents are in the corpus only because an editor listed Xi. The keyness compares what each White House released, including Trump’s long press exchanges (787,645 words in 160 documents against 488,544 in 175). So it compares two ways of talking in public. It says little about the two China policies. The inaugurals were chosen by tradition: one speech per term, the same occasion, written for the nation. The 21 speeches are all there is, so differences between them come from the year and the speaker. With only 21, party keyness is weak.</p>
+<p><strong>What Wordfish measures (3b).</strong> Wordfish (Slapin and Proksch 2008) assumes each word count in a speech is drawn from a Poisson distribution, with a rate set by the speech’s length, the word’s overall frequency, and the speech’s position on one hidden dimension times the word’s weight on it. Words are independent of each other and their order is ignored. On the inaugurals the dimension seems to measure time. It correlates 0.87 with the year, and party adds nothing. Postwar words (“peoples”, “resources”, “program”, “equality”) are at one end; “thank”, “everyone”, “borders”, “jobs” and “protect” are at the other. It could be the policy words of each era, or a change from formal to direct speech. To show what it measures I would need outside evidence: correlation with an independent measure (such as hand-coded tone or expert ideology scores), stable results when I change the preprocessing, and the same dimension found within one era. I must set <code>dir</code> because the model is identified only up to its sign. Flipping every position and word weight fits the data equally well. <code>dir = c(Truman 1949, Trump 2025)</code> puts Truman below Trump, so later speeches are on the positive side. Without it, the direction is arbitrary.</p>
+</section>
+<section id="data-note-the-cpd-collection" class="level2">
+<h2 class="anchored" data-anchor-id="data-note-the-cpd-collection">Data note: the CPD collection</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>manifest <span class="ot">&lt;-</span> docs <span class="sc">|&gt;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(<span class="fu">select</span>(dl_log, packageId, url, status, bytes, md5), <span class="at">by =</span> <span class="st">"packageId"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(packageId, dateIssued, <span class="at">administration =</span> admin, category, title, pages,</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">included =</span> <span class="sc">!</span>digest, <span class="at">xi_named_by =</span> xi_where, url, status, bytes, md5)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(manifest, <span class="fu">file.path</span>(cpd_dir, <span class="st">"manifest.csv"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<ul>
+<li><strong>Source.</strong> <em>Compilation of Presidential Documents</em> (collection CPD), published by the Office of the Federal Register, National Archives and Records Administration, on GovInfo. Accessed through the GovInfo API (<code>api.govinfo.gov</code>): <code>/search</code>, <code>/packages/{id}/summary</code> and <code>/packages/{id}/htm</code>.</li>
+<li><strong>Permission.</strong> Works of the US government are in the public domain (17 U.S.C. § 105). The API needs a free api.data.gov key. I waited 1 to 2 seconds between downloads, well under the rate limit.</li>
+<li><strong>Query.</strong> collection:(CPD) AND “Xi Jinping” AND publishdate:range(2021-01-20,), sorted by publish date, paged 100 at a time, run on 2026-10-19 07:50:57 CDT.</li>
+<li><strong>Selection.</strong> The search returned 344 packages, all downloaded (HTTP 200). I excluded the 9 annual digests and checklists, leaving 335 documents: 175 from Biden and 160 from Trump. The administration comes from each package’s <code>president</code> field. Text analysis uses only the president’s words, split from other speakers and from editors’ headings, brackets and notes with the regular expressions above.</li>
+<li><strong>Gaps.</strong> The search matches the editors’ index of names, so 12 documents are included only because the editors list Xi, and in 41 more only a reporter or another leader says his name. A document where the President says only “Xi” and the editors do not list the full name could be missed. There are no results between January 20 and March 17, 2021, although Biden called Xi on February 10, 2021. That call appears only as a line in the 2021 Digest, not as a document of its own. The latest document is from 2026-09-12, so the CPD seems to run a few weeks behind, and there is no 2025 Digest yet. Translated remarks by foreign leaders and reporters’ questions are in the documents but not in my analysis. The speaker split is a heuristic.</li>
+</ul>
+</section>
+<section id="files" class="level2">
+<h2 class="anchored" data-anchor-id="files">Files</h2>
+<ul>
+<li><a href="data/cpd/download_log.csv">CPD download log</a>: one row per document, with URL, HTTP status, size, MD5 and time.</li>
+<li><a href="data/cpd/manifest.csv">CPD manifest</a>: every package the search returned, with date, administration, category, title, whether it is included, and who names Xi in it.</li>
+<li><a href="data/youtube/video_manifest.csv">YouTube video manifest</a> and <a href="data/youtube/collection_log.csv">collection log</a>.</li>
+</ul>
+<p>The CPD documents (<code>data/cpd/htm/</code>), the YouTube comment text and my copy of the tweets are not posted, and neither are the API keys.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
