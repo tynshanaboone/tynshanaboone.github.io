@@ -148,11 +148,11 @@ script_clean(coffee_raw)
 What broke:
 
 - **The column name.** The filter uses `country_or_region`. The reserves table now calls that column "Country (as recognized by the UN)" and the coffee table calls it "Country", so the code fails on both pages. Any header edit on Wikipedia breaks the script.
-- **The table layout.** My reserves cleaning in 2c names eight columns. The coffee table has two (country and tonnes), so that code fails on it too. Each table needs its own cleaning.
+- **The table layout.** My reserves cleaning in 2c names eight columns. The coffee table has two (country and tonnes), so that code does not fit it either. Each table needs its own cleaning.
 - **The World row.** The coffee table starts with a World total, so the Total/World filter matters here. On the reserves page it removes nothing.
-- **What did not break:** `tabs[[1]]` was the right table on both pages. That was luck, since the code takes the first table without checking.
+- **What did not break:** taking the first table. The coffee page has only one `wikitable`, and on the reserves page the first one is the reserves list. That was luck, since the code takes the first table without checking.
 
-The coffee table cleaned for its own layout (FAO production for 2023, per the table caption):
+The coffee table cleaned for its own layout (green coffee production for 2023, per the table caption):
 
 ```{r}
 coffee <- coffee_raw |>
@@ -296,7 +296,7 @@ only_wb   <- compare |> filter(is.na(incl_gold_musd), !is.na(wb_musd))
 both      <- compare |> filter(!is.na(incl_gold_musd), !is.na(wb_musd))
 ```
 
-`r nrow(both)` countries are in both sources. `r nrow(only_wiki)` are only on Wikipedia and `r nrow(only_wb)` is only in the World Bank data. For the World Bank I used each country's latest year with data.
+`r nrow(both)` countries are in both sources. `r nrow(only_wiki)` are only on Wikipedia and `r nrow(only_wb)` is only in the World Bank data (`r only_wb$wb_country`). For the World Bank I used each country's latest year with data.
 
 ```{r}
 #| fig-height: 5
@@ -346,7 +346,7 @@ only_wiki |> select(country, incl_gold_musd, date_text) |> kable(format.args = l
 
 **Which differ, and why.** The largest holders mostly agree (China, South Korea, Singapore, Brazil and Saudi Arabia are within 4%), but many smaller countries do not. The gaps have five causes:
 
-1. **Different dates.** `r sum(format(reserves$last_reported, "%Y-%m") == "2024-03", na.rm = TRUE)` of the `r nrow(reserves)` Wikipedia rows are dated March 2024, while the World Bank value is mostly for the end of `r max(wb$wb_year)`. For Bolivia, Gabon and South Sudan, the Wikipedia numbers are close to their World Bank values for 2023, and the World Bank's later values are much lower. Some World Bank series also stop early (Hong Kong after 2023, Afghanistan after 2020).
+1. **Different dates.** `r sum(format(reserves$last_reported, "%Y-%m") == "2024-03", na.rm = TRUE)` of the `r nrow(reserves)` Wikipedia rows are dated March 2024, while the World Bank value is mostly for the end of `r max(wb$wb_year)`. For Bolivia, Gabon and South Sudan, the Wikipedia numbers are close to their World Bank values for 2023, and the latest World Bank values are much lower (2025 for Bolivia, 2024 for the other two). Some World Bank series also stop early (Hong Kong after 2023, Afghanistan after 2020).
 2. **Gold valuation.** The United States is `r abs(round(both$diff_pct[both$country == "United States"]))`% lower on Wikipedia. Its "including gold" figure is only about US$11 billion above "excluding gold", which is US gold valued at the old official price of $42.22 an ounce. The World Bank uses the market price, which adds over US$1 trillion.
 3. **Coverage.** The World Bank does not report Taiwan separately. Benin, Burkina Faso, Ivory Coast, Guinea-Bissau, Mali, Niger, Senegal and Togo share one central bank (the BCEAO), which holds their reserves together, so there is no World Bank figure for each country. Iran, North Korea, Cuba, Syria, Turkmenistan, Somalia, Andorra, Curaçao and Kiribati have no World Bank value for these years, and Vatican City and Montserrat are not in the World Bank's country list.
 4. **Units.** Mozambique and North Macedonia show 4 (US$ million) on Wikipedia but several billion at the World Bank. That looks like a number in billions entered in the millions column.
@@ -364,7 +364,7 @@ My research looks at how the timing of my coffee intake relates to my daily focu
 
 **a. Source.** Google Trends search interest for "coffee" in the US: hourly values for each 7-day window and daily values for the same three months as my logs. I chose it because it is the only free public source I found that shows coffee-related behavior by hour. The ICO and USDA publish coffee consumption only as yearly national totals, which cannot show a daily pattern. Coffee shop sales data would be closer to actual drinking, but it is not public.
 
-**b. robots.txt and Terms of Service.** The robots.txt for trends.google.com blocks `/explore?` and `/trends/api`, which are the pages a scraper would request, including the gtrendsR package I used in Assignment 2. Google's Terms of Service do not allow automated access that goes against robots.txt. So scraping Google Trends is not allowed, and I will not do it.
+**b. robots.txt and Terms of Service.** The robots.txt for trends.google.com blocks `/explore?` and `/trends/explore?`, the results pages a scraper would load. Google's Terms of Service do not allow automated access that goes against robots.txt, so scraping those pages is not allowed. The gtrendsR package I used in Assignment 2 calls `/trends/api/explore` instead. robots.txt does not list that path, but it is not a public API: it has no documentation and Google can change or block it at any time. So I will not scrape Google Trends or use gtrendsR for this plan.
 
 **c. API.** Google opened an official Trends API in July 2025, but only for approved applicants, and it gives daily, weekly, monthly or yearly data, not hourly. I will apply and use it for the daily series if I am approved. For the hourly data, and until then, I will use the "Download CSV" button on the Trends website. That is a person using the site, not a bot, so it follows robots.txt and the terms. Since I am not scraping, no justification is needed.
 

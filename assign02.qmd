@@ -96,7 +96,7 @@ TrumpHarrisElection <- gtrends(c("Trump", "Harris", "election"),
 the_df <- TrumpHarrisElection$interest_over_time
 plot(TrumpHarrisElection)
 
-# Cache the raw pull - the next call will not return the same numbers
+# save the raw pull, a later call may not return the same numbers
 write_csv(the_df, paste0("gtrends_us_5y_", Sys.Date(), ".csv"))
 
 # Rest of gtrendsR01.R (adapted)
@@ -150,7 +150,7 @@ ggplot(hk, aes(date, hits, color = keyword)) +
   theme(legend.position = "top")
 ```
 
-They are not the same. "Harris" peaks the week of `r day(h_peak)`, election week, while "Kamala Harris" peaks the week of `r day(k_peak)`, when Biden dropped out and she became the likely nominee. The two peaks are close in both series, so that order could flip in another sample. Relative to its own peak, "Harris" also stays higher the rest of the time (median `r median(num(h$hits))` vs `r median(num(k$hits))`), likely because it also picks up the county, the supermarket and everyone else named Harris. That gap is the difference between a term and a concept. "Harris" measures interest in Kamala Harris plus other things, so the wording decides what I end up measuring.
+They are not the same. "Harris" peaks the week of `r day(h_peak)`, election week, while "Kamala Harris" peaks the week of `r day(k_peak)`, when Biden dropped out and she became the likely nominee. The two peaks are close in both series, so that order could flip in another sample. Relative to its own peak, "Harris" also stays higher the rest of the time (median `r median(num(h$hits))` vs `r median(num(k$hits))`), likely because it also picks up the county, the supermarket and everyone else named Harris. "Harris" measures interest in Kamala Harris plus other things, so the wording decides what I end up measuring.
 
 ## 4. Comparing the two methods
 
@@ -161,6 +161,9 @@ r_long <- r_match$interest_over_time |>
 both <- inner_join(web_long, r_long, by = c("date", "keyword"))
 first_long <- r_first$interest_over_time |> transmute(date = as.Date(date), keyword, r = as.character(hits))
 script_match <- inner_join(web_long, first_long, by = c("date", "keyword"))
+# script's Harris against the website's Kamala Harris, week by week
+harris <- inner_join(filter(web_long, keyword == "Kamala Harris"), filter(first_long, keyword == "Harris"), by = "date") |>
+  mutate(web = num(web), r = num(r))
 
 t_first  <- max(r_log$pulled_utc[r_log$name == "trump_harris_election_us_5y" & r_log$ok])
 t_repeat <- r_log$pulled_utc[r_log$name == "trump_harris_election_us_5y_repeat2"]
@@ -181,14 +184,14 @@ ggplot(both, aes(date)) +
   theme(legend.position = "top")
 ```
 
-**4a. Are the numbers identical?** Yes. I ran the exact website query in R (Kamala Harris, not Harris), and all `r sum(both$web == both$r)` of `r nrow(both)` values match, with no gap in either direction. The script's own query with "Harris" also matches the website exactly for Trump (`r sum(script_match$keyword == "Trump" & script_match$web == script_match$r)` of `r sum(script_match$keyword == "Trump")`) and election (`r sum(script_match$keyword == "election" & script_match$web == script_match$r)` of `r sum(script_match$keyword == "election")`), because election's spike sets the 100 in both. Only the Harris column differs.
+**4a. Are the numbers identical?** Yes. I ran the exact website query in R (Kamala Harris, not Harris), and all `r sum(both$web == both$r)` of `r nrow(both)` values match, with no gap in either direction. The script's own query with "Harris" also matches the website exactly for Trump (`r sum(script_match$keyword == "Trump" & script_match$web == script_match$r)` of `r sum(script_match$keyword == "Trump")`) and election (`r sum(script_match$keyword == "election" & script_match$web == script_match$r)` of `r sum(script_match$keyword == "election")`), because election's spike sets the 100 in both. Only the Harris column differs, and it is higher than the website's Kamala Harris in `r sum(harris$r > harris$web)` of `r nrow(harris)` weeks. Most weeks it is `r names(which.max(table(first_long$r[first_long$keyword == "Harris"])))` where Kamala Harris is <1, and it peaks at `r max(harris$r)` against `r max(harris$web)`.
 
 **4b(i). Reproducibility.** Neither method lets someone else regenerate my file exactly. "Past 5 years" is a moving window, so the same settings cover different weeks tomorrow, and Trends is built from a sample. The R code makes re-running easy, but only my cached files hold these exact numbers.
 
-**4b(ii). Provenance.** R records the query for me: every row carries the keyword, geography, window, search type and category. It does not record when it ran, and "today+5-y" does not say which five years, so I logged the pull times myself. The website CSV only notes the category and geography, so I had to write down everything else in the datasheet.
+**4b(ii). Provenance.** R records the query for me: every row carries the keyword, geography, window, search type and category. It does not record when it ran, and "today+5-y" does not say which five years, so I logged the pull times myself. The website CSV notes the terms, the geography, the category and that the values are weekly. It does not note the time window setting, the search type or when I downloaded it, so I wrote those down in the datasheet.
 
 **4b(iii). Scale.** Both allow five terms per query. Fifty terms means at least ten separate searches, each on its own 0-100 scale. In R that is a loop, but the rescaling problem stays, and fifty requests run into rate limits.
 
 **4b(iv). Fragility.** gtrendsR scrapes a service with no general public API. Of my first nine calls, `r sum(!r_log$ok)` failed and worked a few minutes later. I knew because R threw an error. If Google quietly changed its scaling, nothing would error. On the website, a wrong setting or a changed page layout only gets caught if every choice was recorded.
 
-**4c. Same call twice.** Run again `r gap_min` minutes later, the first call returned the same numbers, `r sum(r_first$interest_over_time$hits == r_repeat$interest_over_time$hits)` of `r nrow(r_first$interest_over_time)` values, so Google appears to reuse the same sample over a short window. That does not prove the data is stable. Trends is a sample, and my test only covered a few minutes. Every finding from this source needs its exact query and pull time, and should come from a saved file, not a fresh call.
+**4c. Same call twice.** When I ran the first call again `r gap_min` minutes later, it returned the same numbers, `r sum(r_first$interest_over_time$hits == r_repeat$interest_over_time$hits)` of `r nrow(r_first$interest_over_time)` values, so Google appears to reuse the same sample over a short window. That does not prove the data is stable. Trends is a sample, and my test only covered a few minutes. Every finding from this source needs its exact query and pull time, and should come from a saved file, not a fresh call.

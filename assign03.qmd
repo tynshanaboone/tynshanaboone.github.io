@@ -11,9 +11,9 @@ format:
 
 This page uses tidycensus to pull ACS 2024 5-year estimates for every county in Texas. It maps median household income and ranks counties by poverty rate, keeping the margin of error (MOE) next to every estimate in the table.
 
-The four deliverables are labeled below: (a) map, (b) table, (c) uncertainty check and (d) methods note. The code for each step is under "Show code".
+The deliverables from part 4 of the brief have their own headings below: 4a map, 4b table, 4c uncertainty check and 4d methods note. The code for each step is under "Show code".
 
-## Setup
+## 1. Setup
 
 ```{r}
 # Packages
@@ -31,7 +31,7 @@ options(tigris_use_cache = TRUE)
 # census_api_key("YOUR_CENSUS_KEY", install = TRUE)
 ```
 
-## Variables
+## 2. Variables
 
 ```{r}
 # 2) Explore variables (no `cache` argument — deprecated and ignored)
@@ -40,7 +40,7 @@ vars |> dplyr::filter(grepl("^B19", name)) |> dplyr::slice_head(n = 10)
 ```
 
 ```{r}
-# 3) Parameters (EDIT ME)
+# 3) Parameters
 state_abbr <- "TX"
 geo_level  <- "county"   # options: state, county, tract, block group
 my_vars    <- c(income = "B19013_001",   # median household income
@@ -50,7 +50,7 @@ year_acs   <- 2024
 survey     <- "acs5"
 ```
 
-## Download
+## 3. Download
 
 ```{r}
 # 4) Download, wide — one row per area, and the sf class survives
@@ -70,12 +70,12 @@ acs_wide <- acs_wide |>
          pov_moe  = moe_prop(povE, povdenE, povM, povdenM))
 ```
 
-## a. Map
+## 4a. Map
 
 ```{r}
 #| fig-width: 7
 #| fig-height: 7
-# 6) Map (edit titles/theme)
+# 6) Map
 ggplot(acs_wide) +
   geom_sf(aes(fill = incomeE), color = "white", linewidth = 0.1) +
   scale_fill_viridis_c(name = "Median household income", labels = scales::label_dollar()) +
@@ -83,7 +83,7 @@ ggplot(acs_wide) +
        subtitle = paste0("ACS ", year_acs - 4, "–", year_acs, " 5-year estimates"),
        caption = "Source: U.S. Census Bureau via tidycensus") +
   theme_minimal() +
-  theme(text = element_text(family = "Palatino"),   # drop if not installed
+  theme(text = element_text(family = "Palatino"),
         plot.title = element_text(size = 14, face = "bold"),
         plot.caption = element_text(size = 8),
         panel.grid = element_blank(),
@@ -103,7 +103,7 @@ gl <- filter(by_income, NAME == "Glasscock County, Texas")
 
 Incomes are highest in the suburban counties around Dallas, Houston, Austin and San Antonio, like Collin, Denton, Fort Bend, Williamson and Kendall. `r sub(", Texas", "", hi$NAME)` is the highest at `r dollars(hi$incomeE)` (± `r dollars(hi$incomeM)`). They are lowest in South Texas, along and near the border, like Starr, Zapata and Zavala, and in some small rural counties. `r sub(", Texas", "", lo$NAME)` is the lowest at `r dollars(lo$incomeE)`, but its MOE is ± `r dollars(lo$incomeM)`. A few small rural counties also show up bright, like Glasscock at `r dollars(gl$incomeE)`, but with an MOE of ± `r dollars(gl$incomeM)`. The shading for small counties is much less certain than for the big metro counties.
 
-## b. Table
+## 4b. Table
 
 Top and bottom ten counties by poverty rate, with the MOE beside each estimate. ACS MOEs are at the 90% confidence level. The rate MOE is in percentage points and the count MOE is in people.
 
@@ -147,7 +147,7 @@ write_csv(st_drop_geometry(acs_wide),
 
 The full tidy dataset is here: [acs_TX_2024.csv](acs_TX_2024.csv).
 
-## c. Uncertainty check
+## 4c. Uncertainty check
 
 ```{r}
 #| echo: false
@@ -161,7 +161,7 @@ lv <- filter(st_drop_geometry(acs_wide), NAME == "Loving County, Texas")
 
 `r a_name` has the highest poverty rate in the table at `r pct(a$pov_rate)`% (± `r pct(a$pov_moe)` points), so its 90% interval runs from `r pct(a$pov_rate - a$pov_moe)`% to `r pct(a$pov_rate + a$pov_moe)`%. `r b_name` is second at `r pct(b$pov_rate)`% (± `r pct(b$pov_moe)` points), from `r pct(b$pov_rate - b$pov_moe)`% to `r pct(b$pov_rate + b$pov_moe)`%. The two intervals overlap. Overlap is a rough check rather than a formal test, but here the gap between them is small next to both MOEs, so the data can't tell us which county really has the higher rate. The table puts `r a_name` first, but a different sample could flip that order. The same is true for many other rows, especially small counties with wide MOEs, so the ranking is better read as high and low groups than as an exact order. Loving County is the extreme case: its `r pct(lv$pov_rate)`% rests on `r lv$povE` people out of `r lv$povdenE`, so its place in the table means very little.
 
-## d. Methods note
+## 4d. Methods note
 
 I used counties because they cover all of Texas and most have samples large enough for usable estimates. Tracts would show more detail, but with much larger MOEs. I mapped median household income (B19013_001) and ranked counties by poverty rate: people below poverty (B17001_002) divided by the poverty universe (B17001_001), the people whose poverty status is determined. I used a rate because a count map mostly shows where people live, and I carried the rate's MOE through with `moe_prop()` instead of dropping it.
 

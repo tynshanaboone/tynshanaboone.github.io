@@ -82,14 +82,13 @@ export_time <- str_extract(export_csv, "\\d{4}-\\d{2}-\\d{2}T\\d{2}_\\d{2}_\\d{2
 export_raw <- read.csv(export_csv)
 export     <- export_raw |> filter(!is.na(suppressWarnings(as.integer(index))))
 
-gf_list        <- jsonlite::read_json(export_json)
-export_json_df <- bind_rows(gf_list$resultSet)
+gf_list    <- jsonlite::read_json(export_json)
 ```
 
 I exported the results as CSV and JSON on `r export_time`. The search found `r format(as.integer(gf_list$TotalCount), big.mark = ",")` hearings, but the site only exports the first `r format(nrow(export), big.mark = ",")`. The CSV format has also changed since the 2024 file `govtdata01.R` reads with `skip = 2`: the header is now on line 1, and the search terms and total count are two extra rows at the bottom.
 
 ```{r}
-tail(export_raw, 3) |> select(index, collection, packageId) |> kable()
+tail(export_raw, 3) |> select(index, collection, packageId) |> kable(row.names = FALSE)
 ```
 
 The newest twelve in the export:
@@ -276,7 +275,7 @@ a_fail <- a1 |> filter(str_starts(result, "Failed"))
 b_ok   <- dl_log |> filter(str_starts(method, "B"), result == "HTTP 200")
 ```
 
-Part B got all `r nrow(b_ok)` files on the first try. Part A failed on `r nrow(a_fail)` large PDFs (`r paste(a_fail$packageId, collapse = " and ")`). R stops a download after 60 seconds by default, and the script's `tryCatch()` returned "Failed" but left the partial file on disk (`r paste(format(a_fail$bytes, big.mark = ","), collapse = " and ")` bytes). Without the log, those would look like real PDFs. The retry with `options(timeout = 600)` got both. Which files fail depends on download speed; in an earlier test run a different large file failed. `httr2` has no time limit by default, so Part B was not affected.
+Part B got all `r nrow(b_ok)` files on the first try. Part A failed on `r nrow(a_fail)` large PDFs (`r paste(a_fail$packageId, collapse = " and ")`). R stops a download after 60 seconds by default, and the script's `tryCatch()` returned "Failed" but left the partial file on disk (`r paste(format(a_fail$bytes, big.mark = ","), collapse = " and ")` bytes). Without the log, those would look like real PDFs. The retry with `options(timeout = 600)` got both. Which files fail depends on download speed. `httr2` has no time limit by default, so Part B was not affected.
 
 ### 3c. Same ten?
 
@@ -306,11 +305,11 @@ final <- dl_log |>
 both_ways <- final |> filter(!is.na(A), !is.na(B))
 ```
 
-Nine of the ten are the same. For tenth place the export has `r only_export` and the API has `r only_api`. Both hearings were held on `r unique(tied$dateIssued)`, and the website and the API break the tie in different orders. A second sort key, such as the S. Hrg. number, would make the list the same every time.
+Nine of the ten are the same. For tenth place the export has `r only_export` and the API has `r only_api`. Both hearings were held on `r unique(tied$dateIssued)`, and the website and the API break the tie in different orders. Sorting my API list on a second key, such as the S. Hrg. number, would keep it the same on every run, but I cannot change how the website orders ties.
 
 The `r nrow(both_ways)` hearings downloaded both ways are `r if (all(both_ways$A == both_ways$B)) "identical files (same MD5)" else "not all identical files"`.
 
-The query matters more than the method. The assignment's phrase query gives a different list:
+The query changes the list more than the method does. The assignment's phrase query gives a different list:
 
 ```{r}
 #| code-fold: false
@@ -336,23 +335,31 @@ pdf_stats <- pdfs |>
     text  = map(file, pdftools::pdf_text),
     words = map_int(text, \(t) sum(lengths(str_split(str_squish(t), " ")))),
     empty_pages = map_int(text, \(t) sum(nchar(str_squish(t)) == 0)),
+    images = map_int(file, \(f) length(system2("pdfimages", c("-list", shQuote(f)), stdout = TRUE, stderr = FALSE)) - 2L),
     mb_per_page = bytes / 1e6 / pages
   )
 
 pdf_stats |>
-  select(packageId, bytes, pages, words, empty_pages, mb_per_page) |>
+  select(packageId, bytes, pages, words, empty_pages, images, mb_per_page) |>
   kable(digits = 2, format.args = list(big.mark = ","))
 ```
 
-All `r nrow(pdf_stats)` PDFs have a text layer: `pdftools` gets `r format(sum(pdf_stats$words), big.mark = ",")` words from `r sum(pdf_stats$pages)` pages, and only one blank page per file has no text. The five large files are large because of embedded images: poppler's `pdfimages` finds 12 to 31 in each, and none in the five small ones.
+All `r nrow(pdf_stats)` PDFs have a text layer: `pdftools` gets `r format(sum(pdf_stats$words), big.mark = ",")` words from `r sum(pdf_stats$pages)` pages, and each file has only `r paste(unique(pdf_stats$empty_pages), collapse = " or ")` page with no text. The `r sum(pdf_stats$images > 0)` large files are large because of embedded images: poppler's `pdfimages -list` finds `r min(pdf_stats$images[pdf_stats$images > 0])` to `r max(pdf_stats$images)` in each, and none in the other `r sum(pdf_stats$images == 0)`.
 
 The text still needs work. Here is page 2 of the first hearing from `pdf_text()`:
 
 ```{r}
-cat(str_sub(pdf_stats$text[[1]][[2]], 1, 1000))
+cat(pdf_stats$text[[1]][[2]])
 ```
 
-The two columns of senators end up on the same lines. Pages carry page numbers ("(II)" in the front matter, a number at the top of body pages), and words are split across lines with hyphens ("agree-"). To turn ten PDFs into a table or a corpus I would need to:
+The two columns of senators end up on the same lines. Pages carry page numbers ("(II)" in the front matter, a number at the top of body pages), and words are split across lines with hyphens. These lines from the same hearing end mid-word:
+
+```{r}
+lines1 <- str_split(pdf_stats$text[[1]], "\n") |> unlist() |> str_squish()
+str_subset(lines1, "[a-z]-$") |> head(3)
+```
+
+To turn ten PDFs into a table or a corpus I would need to:
 
 1. Strip page numbers, headers and line-break hyphens, and rejoin paragraphs that cross pages.
 2. Split the front matter (roster, contents) from the hearing itself.
